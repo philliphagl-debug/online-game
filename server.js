@@ -11,6 +11,9 @@ const PORT = Number(process.env.PORT || 3000);
 if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new Error("PORT must be a valid TCP port.");
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_ROOMS = 500;
+const FINISHED_ROOM_LIFETIME_MS = 5000;
+const BATTLE_SIZE = 10;
+const BATTLE_FLEET = [2, 3, 3, 4, 5];
 const TWO_PLAYER_GAMES = ["pong", "tic-tac-toe", "connect-four", "memory-match", "battleship"];
 const GAMES = [
   "quiz", "pong", "tic-tac-toe", "connect-four", "word-scramble",
@@ -69,10 +72,16 @@ function differentNumber(current) {
 }
 
 function makeBattleshipBoards(players) {
-  return Object.fromEntries(players.map((player) => {
-    const cells = shuffled(Array.from({ length: 25 }, (_, index) => index));
-    return [player.id, { ships: cells.slice(0, 4), shots: {} }];
-  }));
+  return Object.fromEntries(players.map((player) => [player.id, { ships: [], shots: {}, ready: false }]));
+}
+
+function finishRoom(room) {
+  room.phase = "finished";
+  if (rooms.get(room.code) !== room) return;
+  room.closesAt = Date.now() + FINISHED_ROOM_LIFETIME_MS;
+  setTimeout(() => {
+    if (rooms.get(room.code) === room) rooms.delete(room.code);
+  }, FINISHED_ROOM_LIFETIME_MS);
 }
 
 function sendJson(response, status, value) {
@@ -218,7 +227,7 @@ function makeGameState(game) {
     };
   }
   if (game === "battleship") {
-    return { boards: {}, turn: 0, winner: "", message: "" };
+    return { boards: {}, stage: "placement", turn: 0, winner: "", message: "" };
   }
   if (game === "reaction-race") {
     return { goAt: 0, falseStarts: [], winner: "", message: "" };
@@ -263,24 +272,32 @@ function publicRoom(room, playerId) {
   }
   if (room.game === "rock-paper-scissors") {
     const playerHasChosen = Boolean(gameState.choices[playerId]);
-    const allChosen = room.players.every((player) => gameState.choices[player.id]);
     gameState.playerHasChosen = playerHasChosen;
     gameState.choicesMade = Object.keys(gameState.choices).length;
-    if (!allChosen && room.phase !== "finished") gameState.choices = [];
+    if (!gameState.answered) gameState.choices = [];
     else gameState.choices = room.players.map((player) => gameState.choices[player.id]);
   }
   if (room.game === "battleship" && room.players.length === 2 && room.phase !== "lobby") {
-    const spectator = !room.players.some((player) => player.id === playerId);
-    const ownBoard = gameState.boards[spectator ? room.players[0].id : playerId];
-    const opponentId = spectator ? room.players[1].id : room.players.find((player) => player.id !== playerId)?.id;
-    const targetBoard = gameState.boards[opponentId];
-    gameState.ownBoard = Array.from({ length: 25 }, (_, index) => {
-      const incomingShot = ownBoard.shots[index];
-      if (incomingShot === "hit") return "hit";
-      if (incomingShot === "miss") return "miss";
-      return !spectator && ownBoard.ships.includes(index) ? "ship" : "";
-    });
-    gameState.targetBoard = Array.from({ length: 25 }, (_, index) => targetBoard.shots[index] || "");
+    const side = room.players.findIndex((player) => player.id === playerId);
+    gameState.ready = room.players.map((player) => gameState.boards[player.id].ready);
+    if (gameState.stage === "placement" && side >= 0) {
+      const board = gameState.boards[playerId];
+      gameState.placedCount = board.ships.length;
+      gameState.fleet = BATTLE_FLEET;
+      gameState.ownBoard = Array(BATTLE_SIZE * BATTLE_SIZE).fill("");
+      for (const ship of board.ships) {
+        ship.cells.forEach((cell, index) => {
+          const part = index === 0 ? "start" : index === ship.cells.length - 1 ? "end" : "middle";
+          gameState.ownBoard[cell] = `${ship.orientation}-${part}`;
+        });
+      }
+    } else if (gameState.stage === "battle") {
+      const target = gameState.boards[room.players[side < 0 ? 1 : 1 - side].id];
+      const sunk = new Set(target.ships.filter((ship) => ship.cells.every((cell) => target.shots[cell] === "hit"))
+        .flatMap((ship) => ship.cells));
+      gameState.targetBoard = Array.from({ length: BATTLE_SIZE * BATTLE_SIZE }, (_, index) =>
+        sunk.has(index) ? "sunk" : target.shots[index] || "");
+    }
     delete gameState.boards;
   }
   if (room.game === "higher-lower" && room.phase === "playing") delete gameState.target;
@@ -300,6 +317,7 @@ function publicRoom(room, playerId) {
     code: room.code,
     game: room.game,
     phase: room.phase,
+    ...(room.closesAt ? { closesInMs: Math.max(0, room.closesAt - Date.now()) } : {}),
     players: room.players.map((player, index) => ({
       name: player.name,
       mark: room.game === "connect-four" ? (index === 0 ? "RED" : "YELLOW") : index === 0 ? "X" : "O",
@@ -314,6 +332,10 @@ function publicRoom(room, playerId) {
 function findRoom(request, code, collection = rooms) {
   const normalizedCode = typeof code === "string" ? code.trim().toUpperCase() : "";
   const room = collection.get(normalizedCode);
+  if (room && room.closesAt && Date.now() >= room.closesAt) {
+    collection.delete(normalizedCode);
+    throw Object.assign(new Error("Room not found or access denied."), { status: 404 });
+  }
   if (!room) throw Object.assign(new Error("Room not found or access denied."), { status: 404 });
   const authorization = request.headers.authorization || "";
   const match = /^Bearer ([a-f0-9]{64})$/i.exec(authorization);
@@ -386,7 +408,7 @@ function removeGroupMember(group, player) {
   const index = room.players.findIndex((member) => member.id === player.id);
   if (index < 0) return;
   if (room.players.length <= 2 || TWO_PLAYER_GAMES.includes(room.game)) {
-    room.phase = "finished";
+    finishRoom(room);
     room.gameState.abandoned = true;
     room.gameState.message = "A player left. This game has ended.";
     return;
@@ -405,11 +427,11 @@ function removeGroupMember(group, player) {
     if (remaining.length === 1) {
       state.winner = remaining[0].id;
       state.message = `${remaining[0].name} wins!`;
-      room.phase = "finished";
+      finishRoom(room);
     } else if (!remaining.length) {
       state.abandoned = true;
       state.message = "A player left. This game has ended.";
-      room.phase = "finished";
+      finishRoom(room);
     }
   }
 }
@@ -451,7 +473,7 @@ function resolveChoices(room) {
   setTimeout(() => {
     if (room.phase !== "playing" || !state.answered) return;
     if (state.round >= 5) {
-      room.phase = "finished";
+      finishRoom(room);
       const highScore = Math.max(...room.players.map((item) => state.scores[item.id]));
       const winners = room.players.filter((item) => state.scores[item.id] === highScore);
       state.message = winners.length > 1 ? "It's a tie!" : `${winners[0].name} wins!`;
@@ -461,7 +483,7 @@ function resolveChoices(room) {
       state.answered = false;
       state.message = "";
     }
-  }, 1400);
+  }, 3000);
 }
 
 function applyCommand(room, player, body) {
@@ -476,7 +498,7 @@ function applyCommand(room, player, body) {
     hangman: ["letter"],
     "rock-paper-scissors": ["choose"],
     "higher-lower": ["higher-lower"],
-    battleship: ["fire"],
+    battleship: ["place-ship", "reset-fleet", "ready-fleet", "fire"],
     "reaction-race": ["react"],
   };
   if (body.action !== "start" && !allowedActions[room.game]?.includes(body.action)) {
@@ -506,11 +528,11 @@ function applyCommand(room, player, body) {
     if (lines.some((line) => line.every((cell) => state.board[cell] === state.board[index]))) {
       state.winner = state.board[index];
       state.message = `${player.name} wins!`;
-      room.phase = "finished";
+      finishRoom(room);
     } else if (state.board.every(Boolean)) {
       state.winner = "draw";
       state.message = "It's a draw!";
-      room.phase = "finished";
+      finishRoom(room);
     } else {
       state.turn = 1 - state.turn;
     }
@@ -548,11 +570,11 @@ function applyCommand(room, player, body) {
     )) {
       state.winner = mark;
       state.message = `${player.name} wins!`;
-      room.phase = "finished";
+      finishRoom(room);
     } else if (state.board.every(Boolean)) {
       state.winner = "draw";
       state.message = "It's a draw!";
-      room.phase = "finished";
+      finishRoom(room);
     } else {
       state.turn = 1 - state.turn;
     }
@@ -581,7 +603,7 @@ function applyCommand(room, player, body) {
       state.revealed = [];
       state.message = `${player.name} found a pair!`;
       if (state.matched.every(Boolean)) {
-        room.phase = "finished";
+        finishRoom(room);
         const [left, right] = room.players.map((item) => state.scores[item.id]);
         state.message = left === right
           ? "It's a draw!"
@@ -607,10 +629,10 @@ function applyCommand(room, player, body) {
     state.guesses.push(letter);
     if (!state.word.includes(letter)) state.wrong += 1;
     if ([...state.word].every((item) => state.guesses.includes(item))) {
-      room.phase = "finished";
+      finishRoom(room);
       state.message = "You solved it! Nice teamwork.";
     } else if (state.wrong >= 6) {
-      room.phase = "finished";
+      finishRoom(room);
       state.message = `The word was ${state.word}.`;
     }
     return;
@@ -634,7 +656,7 @@ function applyCommand(room, player, body) {
     const correct = body.guess === "higher" ? state.target >= state.current : state.target <= state.current;
     state.round += 1;
     if (!correct) {
-      room.phase = "finished";
+      finishRoom(room);
       state.message = `Not quite! The number was ${state.target}.`;
       return;
     }
@@ -642,7 +664,7 @@ function applyCommand(room, player, body) {
     state.message = `${player.name} guessed right!`;
     state.current = state.target;
     if (state.round >= 10) {
-      room.phase = "finished";
+      finishRoom(room);
       const winner = room.players.reduce((best, item) =>
         state.scores[item.id] > state.scores[best.id] ? item : best, room.players[0]);
       state.message = `${winner.name} wins with ${state.scores[winner.id]} points!`;
@@ -652,22 +674,59 @@ function applyCommand(room, player, body) {
     }
     return;
   }
+  if (["place-ship", "reset-fleet", "ready-fleet"].includes(body.action)) {
+    if (room.phase !== "playing" || state.stage !== "placement") {
+      throw Object.assign(new Error("Fleet placement is no longer available."), { status: 409 });
+    }
+    const board = state.boards[player.id];
+    if (board.ready) throw Object.assign(new Error("Your fleet is already ready."), { status: 409 });
+    if (body.action === "reset-fleet") {
+      board.ships = [];
+      return;
+    }
+    if (body.action === "ready-fleet") {
+      if (board.ships.length !== BATTLE_FLEET.length) {
+        throw Object.assign(new Error("Place all ships first."), { status: 400 });
+      }
+      board.ready = true;
+      if (room.players.every((member) => state.boards[member.id].ready)) state.stage = "battle";
+      return;
+    }
+    const length = BATTLE_FLEET[board.ships.length];
+    if (!length || !Number.isInteger(body.index) || body.index < 0 || body.index >= BATTLE_SIZE * BATTLE_SIZE ||
+      !["horizontal", "vertical"].includes(body.orientation)) {
+      throw Object.assign(new Error("Choose a valid ship placement."), { status: 400 });
+    }
+    const row = Math.floor(body.index / BATTLE_SIZE);
+    const column = body.index % BATTLE_SIZE;
+    if ((body.orientation === "horizontal" ? column : row) + length > BATTLE_SIZE) {
+      throw Object.assign(new Error("The ship must fit on the board."), { status: 400 });
+    }
+    const step = body.orientation === "horizontal" ? 1 : BATTLE_SIZE;
+    const cells = Array.from({ length }, (_, index) => body.index + index * step);
+    if (board.ships.some((ship) => ship.cells.some((cell) => cells.includes(cell)))) {
+      throw Object.assign(new Error("Ships cannot overlap."), { status: 400 });
+    }
+    board.ships.push({ cells, orientation: body.orientation });
+    return;
+  }
   if (body.action === "fire") {
     if (room.phase !== "playing" || room.game !== "battleship") return;
+    if (state.stage !== "battle") throw Object.assign(new Error("Both fleets must be ready first."), { status: 409 });
     if (state.winner || room.players[state.turn]?.id !== player.id) return;
     const index = body.index;
-    if (!Number.isInteger(index) || index < 0 || index >= 25) {
+    if (!Number.isInteger(index) || index < 0 || index >= BATTLE_SIZE * BATTLE_SIZE) {
       throw Object.assign(new Error("Choose a valid grid cell."), { status: 400 });
     }
     const opponent = room.players[1 - state.turn];
     const target = state.boards[opponent.id];
     if (target.shots[index]) return;
-    const hit = target.ships.includes(index);
+    const hit = target.ships.some((ship) => ship.cells.includes(index));
     target.shots[index] = hit ? "hit" : "miss";
-    if (target.ships.every((cell) => target.shots[cell] === "hit")) {
+    if (target.ships.every((ship) => ship.cells.every((cell) => target.shots[cell] === "hit"))) {
       state.winner = player.id;
       state.message = `${player.name} sank the fleet and wins!`;
-      room.phase = "finished";
+      finishRoom(room);
     } else {
       state.turn = 1 - state.turn;
       state.message = hit ? `${player.name} scored a hit!` : `${player.name} missed.`;
@@ -684,13 +743,13 @@ function applyCommand(room, player, body) {
       if (remainingPlayers.length === 1) {
         state.winner = remainingPlayers[0].id;
         state.message = `${remainingPlayers[0].name} wins!`;
-        room.phase = "finished";
+        finishRoom(room);
       }
       return;
     }
     state.winner = player.id;
     state.message = `${player.name} reacted first!`;
-    room.phase = "finished";
+    finishRoom(room);
     return;
   }
   if (body.action === "guess" || body.action === "solve") {
@@ -720,7 +779,7 @@ function applyCommand(room, player, body) {
       state.questionIndex += 1;
       const roundCount = isQuiz ? quizQuestions.length : scrambledWords.length;
       if (state.questionIndex >= roundCount) {
-        room.phase = "finished";
+        finishRoom(room);
         const winner = room.players.reduce((best, item) =>
           state.scores[item.id] > (state.scores[best?.id] ?? -1) ? item : best, null);
         state.message = winner
@@ -763,7 +822,7 @@ function updatePong(room) {
     const scorer = ball.x < 0 ? 1 : 0;
     state.scores[scorer] += 1;
     if (state.scores[scorer] >= 5) {
-      room.phase = "finished";
+      finishRoom(room);
       state.message = `${room.players[scorer].name} wins!`;
       return;
     }

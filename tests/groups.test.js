@@ -97,14 +97,94 @@ test("spectators cannot see Battleship fleets or act; late joiners remain specta
   const spectator = group.players.find((player) => !playing.includes(player.name));
   const state = await request(`/api/groups/state?code=${group.code}`, { token: spectator.token, ip: group.ip });
   assert.equal(state.data.room.you, -1);
-  assert.equal(state.data.room.gameState.ownBoard.includes("ship"), false);
+  assert.equal("ownBoard" in state.data.room.gameState, false);
+  assert.equal("targetBoard" in state.data.room.gameState, false);
   assert.equal("boards" in state.data.room.gameState, false);
   assert.equal((await action(group, spectator, "fire", { index: 0 })).status, 403);
+  assert.equal((await action(group, spectator, "place-ship", { index: 0, orientation: "horizontal" })).status, 403);
   const late = await request("/api/groups/join", { body: { code: group.code, name: "Late" }, ip: group.ip });
   assert.equal(late.status, 201);
   assert.equal(late.data.room.you, -1);
   assert.equal(late.data.members.find((member) => member.isYou).isPlaying, false);
   assert.equal((await action(group, group.players[1], "select-game", { game: "quiz" })).status, 403);
+});
+
+test("Battleship validates fleets, hides them, and finishes after every ship is sunk", async () => {
+  const group = await createGroup(3);
+  const started = await action(group, group.players[0], "select-game", { game: "battleship" });
+  const players = started.data.room.players.map((member) => group.players.find((player) => player.name === member.name));
+  const spectator = group.players.find((player) => !players.includes(player));
+  const place = (player, index, orientation = "horizontal") => action(group, player, "place-ship", { index, orientation });
+  assert.equal((await action(group, players[0], "fire", { index: 0 })).status, 409);
+  assert.equal((await action(group, players[0], "ready-fleet")).status, 400);
+  assert.equal((await place(players[0], 9)).status, 400);
+  assert.equal((await place(players[0], 90, "vertical")).status, 400);
+  assert.equal((await place(players[0], 0)).status, 200);
+  assert.equal((await place(players[0], 1)).status, 400);
+  assert.equal((await action(group, players[0], "reset-fleet")).data.room.gameState.placedCount, 0);
+  for (const player of players) {
+    for (const index of [0, 10, 20, 30, 40]) assert.equal((await place(player, index)).status, 200);
+  }
+  const privateState = await request(`/api/groups/state?code=${group.code}`, { token: players[0].token, ip: group.ip });
+  assert.equal(privateState.data.room.gameState.ownBoard.filter(Boolean).length, 17);
+  assert.equal("targetBoard" in privateState.data.room.gameState, false);
+  assert.equal("boards" in privateState.data.room.gameState, false);
+  const watchingSetup = await request(`/api/groups/state?code=${group.code}`, { token: spectator.token, ip: group.ip });
+  assert.equal("ownBoard" in watchingSetup.data.room.gameState, false);
+  assert.equal((await action(group, players[0], "ready-fleet")).status, 200);
+  assert.equal((await place(players[0], 50)).status, 409);
+  assert.equal((await action(group, players[1], "ready-fleet")).data.room.gameState.stage, "battle");
+  const battle = await request(`/api/groups/state?code=${group.code}`, { token: players[0].token, ip: group.ip });
+  assert.equal("ownBoard" in battle.data.room.gameState, false);
+  assert.deepEqual(battle.data.room.gameState.targetBoard, Array(100).fill(""));
+  const watching = await request(`/api/groups/state?code=${group.code}`, { token: spectator.token, ip: group.ip });
+  assert.equal("ownBoard" in watching.data.room.gameState, false);
+  assert.deepEqual(watching.data.room.gameState.targetBoard, Array(100).fill(""));
+  const targets = [0, 1, 10, 11, 12, 20, 21, 22, 30, 31, 32, 33, 40, 41, 42, 43, 44];
+  for (let turn = 0; turn < targets.length; turn += 1) {
+    const hit = await action(group, players[0], "fire", { index: targets[turn] });
+    assert.equal(hit.status, 200);
+    if (turn === 1) assert.deepEqual(hit.data.room.gameState.targetBoard.slice(0, 2), ["sunk", "sunk"]);
+    if (turn < targets.length - 1) {
+      assert.equal(hit.data.room.phase, "playing");
+      assert.equal((await action(group, players[1], "fire", { index: 70 + turn })).status, 200);
+    } else {
+      assert.equal(hit.data.room.phase, "finished");
+      assert.equal(hit.data.room.gameState.winner, 0);
+      assert.equal(hit.data.room.gameState.targetBoard.filter((mark) => mark === "sunk").length, 17);
+    }
+  }
+});
+
+test("Battleship placement also works in individual rooms", async () => {
+  const ip = `198.51.100.${ipCounter++}`;
+  const created = await request("/api/rooms", { body: { name: "Host", game: "battleship" }, ip });
+  const code = created.data.code;
+  const joined = await request("/api/join", { body: { code, name: "Guest" }, ip });
+  const tokens = [created.data.playerToken, joined.data.playerToken];
+  const command = (side, actionName, extra = {}) => request("/api/action", {
+    token: tokens[side], body: { code, action: actionName, ...extra }, ip,
+  });
+  assert.equal((await command(0, "start")).status, 200);
+  for (const side of [0, 1]) {
+    for (const index of [0, 2, 4, 6, 8]) {
+      assert.equal((await command(side, "place-ship", { index, orientation: "vertical" })).status, 200);
+    }
+    assert.equal((await command(side, "ready-fleet")).status, 200);
+  }
+  assert.equal((await command(0, "fire", { index: 0 })).data.gameState.targetBoard[0], "hit");
+});
+
+test("a group can select a new game if a player leaves during Battleship placement", async () => {
+  const group = await createGroup(3);
+  const started = await action(group, group.players[0], "select-game", { game: "battleship" });
+  const leaving = group.players.find((player) => player.name === started.data.room.players[1].name);
+  assert.equal((await action(group, leaving, "leave")).status, 200);
+  const host = leaving === group.players[0] ? group.players[1] : group.players[0];
+  const state = await request(`/api/groups/state?code=${group.code}`, { token: host.token, ip: group.ip });
+  assert.equal(state.data.room.phase, "finished");
+  assert.equal(state.data.room.gameState.abandoned, true);
+  assert.equal((await action(group, host, "select-game", { game: "quiz" })).status, 200);
 });
 
 test("all eight join a multiplayer game and host transfer preserves the group", async () => {
@@ -150,6 +230,93 @@ test("rock-paper-scissors continues when the remaining players have already chos
   assert.deepEqual(state.data.room.gameState.scores, [1, 0]);
 });
 
+test("rock-paper-scissors keeps choices private until a three-second reveal", async () => {
+  const group = await createGroup(2);
+  await action(group, group.players[0], "select-game", { game: "rock-paper-scissors" });
+  const first = await action(group, group.players[0], "choose", { choice: "rock" });
+  assert.deepEqual(first.data.room.gameState.choices, []);
+  const waiting = await request(`/api/groups/state?code=${group.code}`, { token: group.players[1].token, ip: group.ip });
+  assert.deepEqual(waiting.data.room.gameState.choices, []);
+  assert.equal(waiting.data.room.gameState.playerHasChosen, false);
+  const second = await action(group, group.players[1], "choose", { choice: "paper" });
+  assert.deepEqual(second.data.room.gameState.choices, ["rock", "paper"]);
+  await new Promise((resolve) => setTimeout(resolve, 2100));
+  const reveal = await request(`/api/groups/state?code=${group.code}`, { token: group.players[0].token, ip: group.ip });
+  assert.equal(reveal.data.room.gameState.answered, true);
+  assert.deepEqual(reveal.data.room.gameState.choices, ["rock", "paper"]);
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  const next = await request(`/api/groups/state?code=${group.code}`, { token: group.players[0].token, ip: group.ip });
+  assert.equal(next.data.room.gameState.round, 2);
+  assert.deepEqual(next.data.room.gameState.choices, []);
+});
+
+test("an abandoned rock-paper-scissors round does not reveal a partial choice", async () => {
+  const group = await createGroup(2);
+  await action(group, group.players[0], "select-game", { game: "rock-paper-scissors" });
+  await action(group, group.players[0], "choose", { choice: "scissors" });
+  await action(group, group.players[1], "leave");
+  const state = await request(`/api/groups/state?code=${group.code}`, { token: group.players[0].token, ip: group.ip });
+  assert.equal(state.data.room.gameState.abandoned, true);
+  assert.deepEqual(state.data.room.gameState.choices, []);
+});
+
+test("finished individual rooms close after five seconds while groups stay together", async () => {
+  const group = await createGroup(2);
+  const created = await request("/api/rooms", {
+    body: { name: "Host", game: "tic-tac-toe", code: group.code }, ip: group.ip,
+  });
+  assert.equal(created.status, 201);
+  const joined = await request("/api/join", { body: { name: "Guest", code: group.code }, ip: group.ip });
+  assert.equal(joined.status, 201);
+  const tokens = [created.data.playerToken, joined.data.playerToken];
+  const roomAction = (side, actionName, extra = {}) => request("/api/action", {
+    token: tokens[side], body: { code: group.code, action: actionName, ...extra }, ip: group.ip,
+  });
+  await roomAction(0, "start");
+  await action(group, group.players[0], "select-game", { game: "tic-tac-toe" });
+  let finalRoom;
+  for (const [side, index] of [[0, 0], [1, 3], [0, 1], [1, 4], [0, 2]]) {
+    finalRoom = await roomAction(side, "move", { index });
+    await action(group, group.players[side], "move", { index });
+  }
+  assert.equal(finalRoom.data.phase, "finished");
+  assert.ok(finalRoom.data.closesInMs > 4500 && finalRoom.data.closesInMs <= 5000);
+  const finalGroup = await request(`/api/groups/state?code=${group.code}`, { token: group.players[0].token, ip: group.ip });
+  assert.equal(finalGroup.data.room.phase, "finished");
+  assert.equal("closesInMs" in finalGroup.data.room, false);
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  assert.equal((await request(`/api/state?code=${group.code}`, { token: tokens[1], ip: group.ip })).status, 200);
+  await new Promise((resolve) => setTimeout(resolve, 2200));
+  for (const token of tokens) {
+    assert.equal((await request(`/api/state?code=${group.code}`, { token, ip: group.ip })).status, 404);
+  }
+  const survivingGroup = await request(`/api/groups/state?code=${group.code}`, { token: group.players[1].token, ip: group.ip });
+  assert.equal(survivingGroup.status, 200);
+  assert.equal(survivingGroup.data.members.length, 2);
+  assert.equal((await action(group, group.players[0], "select-game", { game: "quiz" })).status, 200);
+});
+
+test("a game that finishes on a timer also schedules room closure", async () => {
+  const ip = `198.51.100.${ipCounter++}`;
+  const created = await request("/api/rooms", { body: { name: "Host", game: "quiz" }, ip });
+  const code = created.data.code;
+  const token = created.data.playerToken;
+  assert.equal((await request("/api/join", { body: { name: "Guest", code }, ip })).status, 201);
+  const roomAction = (actionName, extra = {}) => request("/api/action", {
+    token, body: { code, action: actionName, ...extra }, ip,
+  });
+  assert.equal((await roomAction("start")).status, 200);
+  for (const answer of ["jupiter", "6", "tokyo", "pacific", "63"]) {
+    assert.equal((await roomAction("guess", { answer })).status, 200);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+  const finished = await request(`/api/state?code=${code}`, { token, ip });
+  assert.equal(finished.data.phase, "finished");
+  assert.ok(finished.data.closesInMs > 0 && finished.data.closesInMs <= 5000);
+  await new Promise((resolve) => setTimeout(resolve, finished.data.closesInMs + 200));
+  assert.equal((await request(`/api/state?code=${code}`, { token, ip })).status, 404);
+});
+
 test("each game can be started and played in a group", async () => {
   const actions = {
     quiz: { action: "guess", answer: "jupiter" },
@@ -161,7 +328,7 @@ test("each game can be started and played in a group", async () => {
     hangman: { action: "letter", letter: "A" },
     "rock-paper-scissors": { action: "choose", choice: "rock" },
     "higher-lower": { action: "higher-lower", guess: "higher" },
-    battleship: { action: "fire", index: 0 },
+    battleship: { action: "place-ship", index: 0, orientation: "horizontal" },
     "reaction-race": { action: "react" },
   };
   for (const [game, command] of Object.entries(actions)) {

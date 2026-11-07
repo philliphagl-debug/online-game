@@ -397,6 +397,19 @@ const descriptionKeys = {
 };
 
 Object.assign(translations.en, {
+  battleshipDesc: "Place your fleet, then find and sink all five enemy ships.",
+  battlePlace: "Place your ships", battleNext: "Next ship length", battleHorizontal: "Horizontal",
+  battleVertical: "Vertical", battleDirection: "Ship direction", battleReset: "Reset fleet",
+  battleReady: "Fleet ready", battleWait: "Waiting for the other player to prepare their fleet.",
+  battleSpectate: "Players are placing their ships.", battleSetupDone: "All ships placed. Confirm when ready.",
+  battleInstructions: "Choose a direction, then tap the first square of each ship. Ships can touch, but not overlap.",
+  battleFleet: "Fleet: 2, 3, 3, 4 and 5 squares", battleShip: "Ship",
+  battleYourTurn: "Your turn to fire.", battleWaitingTurn: "Waiting for your opponent.", battleWatchingTurn: "Watching the match.",
+  battleSunk: "Sunk", battleHit: "Hit", battleMiss: "Miss", battleEmpty: "Untried",
+  battleOutOfBounds: "The ship must fit on the board.", battleOverlap: "Ships cannot overlap.",
+  selectTheme: "Select color theme", themeClassic: "Classic", themeOcean: "Ocean", themeSunset: "Sunset",
+  themeForest: "Forest", themeBerry: "Berry", themeCitrus: "Citrus",
+  roomClosing: "This room closes 5 seconds after the game ends.", roomClosed: "Game over. The room has closed.",
   groupTitle: "Play together as a group", groupDescription: "Stay together while the host chooses the next game.",
   createGroup: "Create group", joinGroup: "Join group", groupCode: "GROUP CODE",
   groupLobby: "Group lobby", groupMembers: "Group members", groupChoose: "Choose the next game",
@@ -405,6 +418,19 @@ Object.assign(translations.en, {
   groupJoining: "Joining group", groupLeave: "← Leave group", abandoned: "A player left. This game has ended.",
 });
 Object.assign(translations.de, {
+  battleshipDesc: "Platziere deine Flotte und versenke die fünf gegnerischen Schiffe.",
+  battlePlace: "Platziere deine Schiffe", battleNext: "Länge des nächsten Schiffs", battleHorizontal: "Waagerecht",
+  battleVertical: "Senkrecht", battleDirection: "Schiffsrichtung", battleReset: "Flotte zurücksetzen",
+  battleReady: "Flotte bereit", battleWait: "Warte, bis die andere Person ihre Flotte vorbereitet hat.",
+  battleSpectate: "Die Spieler platzieren ihre Schiffe.", battleSetupDone: "Alle Schiffe platziert. Bestätige, wenn du bereit bist.",
+  battleInstructions: "Wähle die Richtung und tippe auf das erste Feld jedes Schiffs. Schiffe dürfen sich berühren, aber nicht überlappen.",
+  battleFleet: "Flotte: 2, 3, 3, 4 und 5 Felder", battleShip: "Schiff",
+  battleYourTurn: "Du bist am Zug.", battleWaitingTurn: "Dein Gegner ist am Zug.", battleWatchingTurn: "Du schaust zu.",
+  battleSunk: "Versenkt", battleHit: "Treffer", battleMiss: "Daneben", battleEmpty: "Noch nicht beschossen",
+  battleOutOfBounds: "Das Schiff muss auf das Spielfeld passen.", battleOverlap: "Schiffe dürfen sich nicht überlappen.",
+  selectTheme: "Farbdesign auswählen", themeClassic: "Klassisch", themeOcean: "Ozean", themeSunset: "Sonnenuntergang",
+  themeForest: "Wald", themeBerry: "Beere", themeCitrus: "Zitrus",
+  roomClosing: "Dieser Raum schließt 5 Sekunden nach Spielende.", roomClosed: "Spiel beendet. Der Raum wurde geschlossen.",
   groupTitle: "Zusammen in einer Gruppe spielen", groupDescription: "Bleibt zusammen, während der Host das nächste Spiel auswählt.",
   createGroup: "Gruppe erstellen", joinGroup: "Gruppe beitreten", groupCode: "GRUPPENCODE",
   groupLobby: "Gruppenlobby", groupMembers: "Gruppenmitglieder", groupChoose: "Nächstes Spiel auswählen",
@@ -413,6 +439,19 @@ Object.assign(translations.de, {
   groupJoining: "Beitritt zur Gruppe", groupLeave: "← Gruppe verlassen", abandoned: "Ein Spieler hat die Gruppe verlassen. Das Spiel wurde beendet.",
 });
 Object.assign(translations.zh, {
+  battleshipDesc: "布置舰队，然后找到并击沉对方的五艘船。",
+  battlePlace: "布置你的舰船", battleNext: "下一艘船的长度", battleHorizontal: "横向",
+  battleVertical: "纵向", battleDirection: "舰船方向", battleReset: "重置舰队",
+  battleReady: "舰队就绪", battleWait: "等待对方布置舰队。",
+  battleSpectate: "玩家正在布置舰船。", battleSetupDone: "所有舰船已放置，准备好后请确认。",
+  battleInstructions: "选择方向，然后点击每艘船的起始格。船可以相邻，但不能重叠。",
+  battleFleet: "舰队长度：2、3、3、4、5 格", battleShip: "舰船",
+  battleYourTurn: "轮到你开火。", battleWaitingTurn: "等待对方开火。", battleWatchingTurn: "正在观战。",
+  battleSunk: "已击沉", battleHit: "命中", battleMiss: "未命中", battleEmpty: "尚未射击",
+  battleOutOfBounds: "舰船必须放在棋盘内。", battleOverlap: "舰船不能重叠。",
+  selectTheme: "选择配色", themeClassic: "经典", themeOcean: "海洋", themeSunset: "日落",
+  themeForest: "森林", themeBerry: "莓果", themeCitrus: "柑橘",
+  roomClosing: "游戏结束 5 秒后房间关闭。", roomClosed: "游戏结束，房间已关闭。",
   groupTitle: "一起组队玩", groupDescription: "大家留在同一组，由房主选择下一个游戏。",
   createGroup: "创建小组", joinGroup: "加入小组", groupCode: "小组代码",
   groupLobby: "小组大厅", groupMembers: "小组成员", groupChoose: "选择下一个游戏",
@@ -421,6 +460,19 @@ Object.assign(translations.zh, {
   groupJoining: "加入小组", groupLeave: "← 离开小组", abandoned: "一名玩家离开，小组游戏已结束。",
 });
 Object.assign(translations.es, {
+  battleshipDesc: "Coloca tu flota y hunde los cinco barcos rivales.",
+  battlePlace: "Coloca tus barcos", battleNext: "Longitud del siguiente barco", battleHorizontal: "Horizontal",
+  battleVertical: "Vertical", battleDirection: "Dirección del barco", battleReset: "Reiniciar flota",
+  battleReady: "Flota lista", battleWait: "Esperando a que el otro jugador prepare su flota.",
+  battleSpectate: "Los jugadores están colocando sus barcos.", battleSetupDone: "Todos los barcos colocados. Confirma cuando estés listo.",
+  battleInstructions: "Elige la dirección y toca la primera casilla de cada barco. Pueden tocarse, pero no superponerse.",
+  battleFleet: "Flota: 2, 3, 3, 4 y 5 casillas", battleShip: "Barco",
+  battleYourTurn: "Te toca disparar.", battleWaitingTurn: "Es el turno de tu rival.", battleWatchingTurn: "Estás observando la partida.",
+  battleSunk: "Hundido", battleHit: "Impacto", battleMiss: "Agua", battleEmpty: "Sin disparar",
+  battleOutOfBounds: "El barco debe caber en el tablero.", battleOverlap: "Los barcos no pueden superponerse.",
+  selectTheme: "Elegir colores", themeClassic: "Clásico", themeOcean: "Océano", themeSunset: "Atardecer",
+  themeForest: "Bosque", themeBerry: "Baya", themeCitrus: "Cítricos",
+  roomClosing: "La sala se cierra 5 segundos después del final.", roomClosed: "Partida terminada. La sala se ha cerrado.",
   groupTitle: "Jugad juntos en grupo", groupDescription: "Permaneced juntos mientras el anfitrión elige el próximo juego.",
   createGroup: "Crear grupo", joinGroup: "Unirse al grupo", groupCode: "CÓDIGO DE GRUPO",
   groupLobby: "Sala de grupo", groupMembers: "Miembros del grupo", groupChoose: "Elegir el próximo juego",
@@ -428,6 +480,10 @@ Object.assign(translations.es, {
   groupInvite: "Comparte el enlace del grupo para invitar a amigos.", groupStarting: "Crear grupo",
   groupJoining: "Uniéndose al grupo", groupLeave: "← Salir del grupo", abandoned: "Un jugador se marchó. La partida ha terminado.",
 });
+
+for (const lang of ["en", "de", "zh", "es"]) {
+  translations[lang].words.battleship[1] = translations[lang].battleshipDesc;
+}
 
 let language = ["en", "de", "zh", "es"].includes(localStorage.getItem("play-together-language"))
   ? localStorage.getItem("play-together-language")
@@ -485,6 +541,7 @@ function applyLanguage() {
   document.documentElement.lang = language === "zh" ? "zh-CN" : language;
   document.title = t("pageTitle");
   document.querySelector("#language-select").setAttribute("aria-label", t("selectLanguage"));
+  document.querySelector("#theme-select").setAttribute("aria-label", t("selectTheme"));
   document.querySelector("#join-code").placeholder = t("roomCodePlaceholder");
   document.querySelector("#join-group-code").placeholder = t("groupCode");
   document.querySelectorAll("[data-i18n]").forEach((element) => {
@@ -514,6 +571,15 @@ document.querySelector("#language-select").addEventListener("change", (event) =>
   applyLanguage();
 });
 
+const themeSelect = document.querySelector("#theme-select");
+const savedTheme = localStorage.getItem("play-together-theme");
+themeSelect.value = [...themeSelect.options].some((option) => option.value === savedTheme) ? savedTheme : "classic";
+document.documentElement.dataset.theme = themeSelect.value;
+themeSelect.addEventListener("change", () => {
+  document.documentElement.dataset.theme = themeSelect.value;
+  localStorage.setItem("play-together-theme", themeSelect.value);
+});
+
 const homeScreen = document.querySelector("#home-screen");
 const roomScreen = document.querySelector("#room-screen");
 const roomContent = document.querySelector("#room-content");
@@ -527,6 +593,11 @@ let currentRoom = null;
 let pollTimer = null;
 let toastTimer = null;
 let lastRendered = "";
+let lastRenderContext = "";
+let requestSequence = 0;
+let lastAppliedRequest = 0;
+let lastActionRequest = 0;
+const pendingActions = new Map();
 let pendingEntry = null;
 let currentGame = "";
 let currentPhase = "";
@@ -535,6 +606,8 @@ let currentSpectator = false;
 let lastPaddleDirection = 0;
 let celebratedRoom = "";
 let fireworksTimer = null;
+let roomCloseTimer = null;
+let battleOrientation = "horizontal";
 const pressedKeys = new Set();
 applyLanguage();
 
@@ -581,16 +654,20 @@ function enterRoom(room) {
 async function refreshRoom() {
   if (!currentRoom) return;
   const session = currentRoom;
+  const sequence = ++requestSequence;
   try {
     const params = new URLSearchParams({ code: currentRoom.code });
     const path = currentRoom.kind === "group" ? "/api/groups/state" : "/api/state";
     const room = await request(`${path}?${params}`, { playerToken: currentRoom.playerToken });
-    if (currentRoom !== session) return;
+    if (currentRoom !== session || sequence < lastActionRequest || sequence < lastAppliedRequest ||
+      [...pendingActions.values()].includes(session)) return;
+    lastAppliedRequest = sequence;
     if (session.kind === "group") renderGroup(room);
     else renderRoom(room);
   } catch (error) {
-    if (currentRoom !== session) return;
-    showToast(error.message);
+    if (currentRoom !== session || sequence < lastActionRequest || sequence < lastAppliedRequest ||
+      [...pendingActions.values()].includes(session)) return;
+    showToast(session.kind !== "group" && currentPhase === "finished" && error.status === 404 ? t("roomClosed") : error.message);
     if (session.kind !== "group" || error.status === 404) leaveRoom();
   }
 }
@@ -598,6 +675,9 @@ async function refreshRoom() {
 async function sendAction(action, extra = {}) {
   if (!currentRoom) return;
   const session = currentRoom;
+  const sequence = ++requestSequence;
+  lastActionRequest = sequence;
+  pendingActions.set(sequence, session);
   try {
     const path = session.kind === "group" ? "/api/groups/action" : "/api/action";
     const room = await request(path, {
@@ -605,11 +685,21 @@ async function sendAction(action, extra = {}) {
       body: JSON.stringify({ code: session.code, action, ...extra }),
       playerToken: session.playerToken,
     });
-    if (currentRoom !== session) return;
+    if (currentRoom !== session || sequence < lastAppliedRequest) return;
+    lastAppliedRequest = sequence;
     if (session.kind === "group") renderGroup(room);
     else renderRoom(room);
   } catch (error) {
-    showToast(error.message);
+    if (currentRoom === session) {
+      const errorKey = {
+        "The ship must fit on the board.": "battleOutOfBounds",
+        "Ships cannot overlap.": "battleOverlap",
+      }[error.message];
+      showToast(errorKey ? t(errorKey) : error.message);
+    }
+  } finally {
+    pendingActions.delete(sequence);
+    if (currentRoom === session) lastActionRequest = ++requestSequence;
   }
 }
 
@@ -677,10 +767,32 @@ function renderRoom(room) {
   currentGame = room.game;
   currentPhase = room.phase;
   currentSpectator = Boolean(room.group && room.group.round > 0 && room.you < 0);
-  const signature = JSON.stringify(room);
+  if (!room.group && room.phase === "finished" && Number.isFinite(room.closesInMs) && roomCloseTimer === null) {
+    const session = currentRoom;
+    roomCloseTimer = setTimeout(() => {
+      if (currentRoom !== session) return;
+      leaveRoom();
+      showToast(t("roomClosed"));
+    }, room.closesInMs);
+  }
+  const { closesInMs, ...renderState } = room;
+  const signature = JSON.stringify(renderState);
   if (signature === lastRendered) return;
   lastRendered = signature;
   const group = room.group;
+  const context = JSON.stringify([room.code, group?.round, room.game, room.phase,
+    room.gameState.questionNumber, room.gameState.round]);
+  const preserve = context === lastRenderContext;
+  const answer = preserve ? roomContent.querySelector(".answer-form input") : null;
+  const selectedGame = preserve ? roomContent.querySelector("#group-game")?.value : null;
+  const inputState = answer ? {
+    value: answer.value,
+    focused: document.activeElement === answer,
+    start: answer.selectionStart,
+    end: answer.selectionEnd,
+  } : null;
+  const gameSelectFocused = preserve && document.activeElement === roomContent.querySelector("#group-game");
+  lastRenderContext = context;
   const you = room.players[room.you] || (group ? { isHost: group.isHost } : null);
   if (!you) return;
   const gameName = translations[language].words[room.game][0];
@@ -702,6 +814,7 @@ function renderRoom(room) {
       <h1>${groupLobby ? t("groupLobby") : room.phase === "lobby" ? t("gameNight") : room.phase === "finished" ? t("gameOver") : t("letGamesBegin")}</h1>
       ${won ? `<div class="victory-badge"><span aria-hidden="true">✦</span> ${t("victory")} <span aria-hidden="true">✦</span></div>` : ""}
       <p>${groupLobby ? t("groupInvite") : room.phase === "lobby" ? t("shareCode") : t(descriptionKeys[room.game])}</p>
+      ${!group && room.phase === "finished" ? `<p class="room-closing" role="status">${t("roomClosing")}</p>` : ""}
       <div class="room-code"><span>${group ? t("groupCode") : t("taglineJoin")}</span><strong>${escapeHtml(room.code)}</strong><button id="copy-code">${t("copy")}</button></div>
       ${group || room.phase === "lobby" ? `<div class="invite-share"><label for="invite-link">${t("inviteLink")}</label><div><input id="invite-link" type="text" readonly><button id="copy-link" class="button button-primary">${t("copyLink")}</button></div></div>` : ""}
     </div>
@@ -724,6 +837,19 @@ function renderRoom(room) {
       </aside>
     </div>`;
 
+  const newAnswer = roomContent.querySelector(".answer-form input");
+  if (newAnswer && inputState) {
+    newAnswer.value = inputState.value;
+    if (inputState.focused && !newAnswer.disabled) {
+      newAnswer.focus({ preventScroll: true });
+      newAnswer.setSelectionRange(inputState.start, inputState.end);
+    }
+  }
+  const gameSelect = roomContent.querySelector("#group-game");
+  if (gameSelect && selectedGame) {
+    gameSelect.value = selectedGame;
+    if (gameSelectFocused) gameSelect.focus({ preventScroll: true });
+  }
   roomContent.querySelector("#copy-code")?.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(room.code);
@@ -788,6 +914,21 @@ function renderRoom(room) {
   roomContent.querySelectorAll(".target-board .battle-cell").forEach((cell) => {
     cell.addEventListener("click", () => sendAction("fire", { index: Number(cell.dataset.index) }));
   });
+  roomContent.querySelector("#battle-direction")?.addEventListener("change", (event) => {
+    battleOrientation = event.currentTarget.value;
+  });
+  roomContent.querySelectorAll(".placement-board .battle-cell").forEach((cell) => {
+    cell.addEventListener("click", () => {
+      const buttons = [...roomContent.querySelectorAll(".placement-board button, .battle-controls button")];
+      const disabled = buttons.map((button) => button.disabled);
+      buttons.forEach((button) => { button.disabled = true; });
+      sendAction("place-ship", { index: Number(cell.dataset.index), orientation: battleOrientation }).finally(() => {
+        if (cell.isConnected) buttons.forEach((button, index) => { button.disabled = disabled[index]; });
+      });
+    });
+  });
+  roomContent.querySelector("#battle-reset")?.addEventListener("click", () => sendAction("reset-fleet"));
+  roomContent.querySelector("#battle-ready")?.addEventListener("click", () => sendAction("ready-fleet"));
   roomContent.querySelectorAll(".connect-cell").forEach((cell) => {
     cell.addEventListener("click", () => sendAction("drop", { column: Number(cell.dataset.column) }));
   });
@@ -882,15 +1023,35 @@ function renderGame(room, you) {
         `<span class="score-chip">${escapeHtml(player.name)} · ${state.scores[player.side] || 0}</span>`).join("")}</div>`;
   }
   if (room.game === "battleship") {
+    if (state.stage === "placement") {
+      if (room.phase === "finished") return `<div class="game-status">${escapeHtml(message)}</div>`;
+      if (room.you < 0) return `<div class="game-status">${t("battleSpectate")}</div>`;
+      const ready = state.ready[room.you];
+      const allPlaced = state.placedCount === state.fleet.length;
+      const status = ready ? t("battleWait") : allPlaced ? t("battleSetupDone") :
+        `${t("battleNext")}: ${state.fleet[state.placedCount]} (${state.placedCount + 1}/${state.fleet.length})`;
+      return `<div class="game-status">${escapeHtml(status)}</div>
+        <h3 class="board-title">${t("battlePlace")}</h3>
+        <p class="game-help">${t("battleInstructions")}<br>${t("battleFleet")}</p>
+        <div class="battle-controls">
+          <label for="battle-direction">${t("battleDirection")}</label>
+          <select id="battle-direction" ${ready || allPlaced ? "disabled" : ""}>
+            <option value="horizontal" ${battleOrientation === "horizontal" ? "selected" : ""}>${t("battleHorizontal")}</option>
+            <option value="vertical" ${battleOrientation === "vertical" ? "selected" : ""}>${t("battleVertical")}</option>
+          </select>
+          <button id="battle-reset" class="button button-light" ${ready || !state.placedCount ? "disabled" : ""}>${t("battleReset")}</button>
+          <button id="battle-ready" class="button button-primary" ${ready || !allPlaced ? "disabled" : ""}>${t("battleReady")}</button>
+        </div>
+        <div class="battle-board placement-board">${state.ownBoard.map((mark, index) =>
+          `<button class="battle-cell ${mark ? `battle-ship ship-${mark}` : ""}" data-index="${index}" aria-label="${t("yourFleet")} ${String.fromCharCode(65 + index % 10)}${Math.floor(index / 10) + 1}${mark ? `: ${t("battleShip")}` : ""}" ${ready || allPlaced ? "disabled" : ""}></button>`).join("")}</div>`;
+    }
     const yourTurn = room.phase === "playing" && room.you === state.turn;
     return `<div class="game-status">${escapeHtml(message || `${t("turn")}: ${room.players[state.turn]?.name || ""}`)}</div>
+      ${room.phase === "playing" ? `<p class="game-help">${t(room.you < 0 ? "battleWatchingTurn" : yourTurn ? "battleYourTurn" : "battleWaitingTurn")}</p>` : ""}
       <p class="game-help">${t("fireInstructions")}</p>
       <h3 class="board-title">${t("opponentGrid")}</h3>
       <div class="battle-board target-board">${state.targetBoard.map((mark, index) =>
-        `<button class="battle-cell ${mark ? `battle-${mark}` : ""}" data-index="${index}" aria-label="${t("opponentGrid")} ${index + 1}" ${!yourTurn || mark ? "disabled" : ""}>${mark === "hit" ? "×" : mark === "miss" ? "·" : ""}</button>`).join("")}</div>
-      <h3 class="board-title">${t("yourFleet")}</h3>
-      <div class="battle-board own-board">${state.ownBoard.map((mark, index) =>
-        `<div class="battle-cell ${mark ? `battle-${mark}` : ""}" aria-label="${t("yourFleet")} ${index + 1}">${mark === "hit" ? "×" : mark === "miss" ? "·" : ""}</div>`).join("")}</div>`;
+        `<button class="battle-cell ${mark ? `battle-${mark}` : ""}" data-index="${index}" aria-label="${t("opponentGrid")} ${String.fromCharCode(65 + index % 10)}${Math.floor(index / 10) + 1}: ${t(mark === "sunk" ? "battleSunk" : mark === "hit" ? "battleHit" : mark === "miss" ? "battleMiss" : "battleEmpty")}" ${!yourTurn || mark ? "disabled" : ""}>${mark === "hit" || mark === "sunk" ? "×" : mark === "miss" ? "·" : ""}</button>`).join("")}</div>`;
   }
   const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
   const turnText = state.winner || state.abandoned ? localizeMessage(room, state.message) :
@@ -945,6 +1106,8 @@ function leaveRoom() {
     sendAction("paddle", { direction: 0 });
   }
   clearInterval(pollTimer);
+  clearTimeout(roomCloseTimer);
+  roomCloseTimer = null;
   clearTimeout(fireworksTimer);
   fireworksTimer = null;
   document.querySelectorAll(".fireworks").forEach((element) => element.remove());
@@ -954,6 +1117,7 @@ function leaveRoom() {
   currentPhase = "";
   currentSpectator = false;
   groupRound = 0;
+  lastRenderContext = "";
   lastPaddleDirection = 0;
   pressedKeys.clear();
   sessionStorage.removeItem("play-together-room");

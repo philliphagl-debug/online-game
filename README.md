@@ -22,7 +22,9 @@ Create a **Web Service** from the GitHub repository. Use the project root as
 the root directory, choose the Node runtime, and set the build command to
 `npm install` and the start command to `npm start`. Render supplies `PORT`.
 
-Game rooms are held in memory and are cleared when the server restarts.
+Game rooms are held in memory and are cleared when the server restarts. After
+an individual game ends, its result is shown for five seconds, then the room
+closes and players return to the game selection.
 
 Groups have their own codes and invitation links, separate from individual game
 rooms. Up to eight members can stay together while the host selects games.
@@ -43,3 +45,13 @@ want to invite.
 Winners see a victory badge and fireworks; both players see fireworks after a
 Tic-Tac-Toe win. The animation is disabled when the device is set to reduce
 motion.
+
+Choose Classic, Ocean, Sunset, Forest, Berry, or Citrus from the color selector in the header. The
+choice is saved in the current browser and does not change other players' themes.
+In Rock Paper Scissors, choices stay hidden until everyone has chosen; the
+result is shown for three seconds before the next round.
+
+Battleship uses a 10×10 board and five ships of lengths 2, 3, 3, 4 and 5.
+Each player places and confirms their own fleet before play starts. Ships may
+touch but cannot overlap. During play only the opponent's grid is shown; hits,
+misses and sunk ships appear there, while unhit ship positions stay hidden.
