@@ -112,6 +112,18 @@
 
         <section class="join-panel">
           <div>
+            <h2 data-i18n="groupTitle">Play together as a group</h2>
+            <p data-i18n="groupDescription">Stay together while the host chooses the next game.</p>
+          </div>
+          <button id="create-group" class="button button-primary" type="button" data-i18n="createGroup">Create group</button>
+          <form id="join-group-form" class="join-form">
+            <label class="sr-only" for="join-group-code" data-i18n="groupCode">GROUP CODE</label>
+            <input id="join-group-code" maxlength="16" pattern="[A-Za-z0-9]{4,16}" placeholder="GROUP CODE" autocomplete="off" required>
+            <button class="button button-dark" type="submit" data-i18n="joinGroup">Join group</button>
+          </form>
+        </section>
+        <section class="join-panel">
+          <div>
             <h2 data-i18n="alreadyHaveRoom">Already have a room?</h2>
             <p data-i18n="enterRoomCode">Enter your friend's room code and jump right in.</p>
           </div>

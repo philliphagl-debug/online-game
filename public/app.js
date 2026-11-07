@@ -396,6 +396,39 @@ const descriptionKeys = {
   "reaction-race": "reactionDesc",
 };
 
+Object.assign(translations.en, {
+  groupTitle: "Play together as a group", groupDescription: "Stay together while the host chooses the next game.",
+  createGroup: "Create group", joinGroup: "Join group", groupCode: "GROUP CODE",
+  groupLobby: "Group lobby", groupMembers: "Group members", groupChoose: "Choose the next game",
+  groupWaiting: "The host chooses the next game.", groupPlaying: "Playing", groupSpectating: "Spectating",
+  groupInvite: "Share the group link so friends can join.", groupStarting: "Creating a group",
+  groupJoining: "Joining group", groupLeave: "← Leave group", abandoned: "A player left. This game has ended.",
+});
+Object.assign(translations.de, {
+  groupTitle: "Zusammen in einer Gruppe spielen", groupDescription: "Bleibt zusammen, während der Host das nächste Spiel auswählt.",
+  createGroup: "Gruppe erstellen", joinGroup: "Gruppe beitreten", groupCode: "GRUPPENCODE",
+  groupLobby: "Gruppenlobby", groupMembers: "Gruppenmitglieder", groupChoose: "Nächstes Spiel auswählen",
+  groupWaiting: "Der Host wählt das nächste Spiel.", groupPlaying: "Spielt", groupSpectating: "Schaut zu",
+  groupInvite: "Teile den Gruppenlink, damit Freunde beitreten können.", groupStarting: "Gruppe erstellen",
+  groupJoining: "Beitritt zur Gruppe", groupLeave: "← Gruppe verlassen", abandoned: "Ein Spieler hat die Gruppe verlassen. Das Spiel wurde beendet.",
+});
+Object.assign(translations.zh, {
+  groupTitle: "一起组队玩", groupDescription: "大家留在同一组，由房主选择下一个游戏。",
+  createGroup: "创建小组", joinGroup: "加入小组", groupCode: "小组代码",
+  groupLobby: "小组大厅", groupMembers: "小组成员", groupChoose: "选择下一个游戏",
+  groupWaiting: "房主正在选择下一个游戏。", groupPlaying: "正在游戏", groupSpectating: "观战中",
+  groupInvite: "分享小组链接，邀请朋友加入。", groupStarting: "创建小组",
+  groupJoining: "加入小组", groupLeave: "← 离开小组", abandoned: "一名玩家离开，小组游戏已结束。",
+});
+Object.assign(translations.es, {
+  groupTitle: "Jugad juntos en grupo", groupDescription: "Permaneced juntos mientras el anfitrión elige el próximo juego.",
+  createGroup: "Crear grupo", joinGroup: "Unirse al grupo", groupCode: "CÓDIGO DE GRUPO",
+  groupLobby: "Sala de grupo", groupMembers: "Miembros del grupo", groupChoose: "Elegir el próximo juego",
+  groupWaiting: "El anfitrión elige el próximo juego.", groupPlaying: "Jugando", groupSpectating: "Observando",
+  groupInvite: "Comparte el enlace del grupo para invitar a amigos.", groupStarting: "Crear grupo",
+  groupJoining: "Uniéndose al grupo", groupLeave: "← Salir del grupo", abandoned: "Un jugador se marchó. La partida ha terminado.",
+});
+
 let language = ["en", "de", "zh", "es"].includes(localStorage.getItem("play-together-language"))
   ? localStorage.getItem("play-together-language")
   : "en";
@@ -405,6 +438,7 @@ function t(key) {
 
 function localizeMessage(room, message) {
   if (!message || language === "en") return message;
+  if (message === "A player left. This game has ended.") return t("abandoned");
   for (const player of room.players) {
     if (message === `${player.name} jumped the start!`) return `${player.name} ${t("falseStart")}`;
     if (message === `${player.name} reacted first!`) return `${player.name} ${t("reacted")}`;
@@ -452,6 +486,7 @@ function applyLanguage() {
   document.title = t("pageTitle");
   document.querySelector("#language-select").setAttribute("aria-label", t("selectLanguage"));
   document.querySelector("#join-code").placeholder = t("roomCodePlaceholder");
+  document.querySelector("#join-group-code").placeholder = t("groupCode");
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
   });
@@ -495,6 +530,8 @@ let lastRendered = "";
 let pendingEntry = null;
 let currentGame = "";
 let currentPhase = "";
+let groupRound = 0;
+let currentSpectator = false;
 let lastPaddleDirection = 0;
 let celebratedRoom = "";
 let fireworksTimer = null;
@@ -519,53 +556,65 @@ async function request(url, options = {}) {
     },
   });
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error || "Something went wrong.");
+  if (!response.ok) throw Object.assign(new Error(result.error || "Something went wrong."), { status: response.status });
   return result;
 }
 
 function enterRoom(room) {
-  currentRoom = { code: room.code, playerToken: room.playerToken };
-  currentGame = room.game;
-  currentPhase = room.phase;
+  const isGroup = Boolean(room.members);
+  currentRoom = { code: room.code, playerToken: room.playerToken, ...(isGroup ? { kind: "group" } : {}) };
+  currentGame = isGroup ? "" : room.game;
+  currentPhase = isGroup ? "" : room.phase;
+  groupRound = 0;
   pressedKeys.clear();
   lastPaddleDirection = 0;
   sessionStorage.setItem("play-together-room", JSON.stringify(currentRoom));
   lastRendered = "";
   homeScreen.classList.add("hidden");
   roomScreen.classList.remove("hidden");
-  renderRoom(room);
+  if (isGroup) renderGroup(room);
+  else renderRoom(room);
   clearInterval(pollTimer);
   pollTimer = setInterval(refreshRoom, 600);
 }
 
 async function refreshRoom() {
   if (!currentRoom) return;
+  const session = currentRoom;
   try {
     const params = new URLSearchParams({ code: currentRoom.code });
-    const room = await request(`/api/state?${params}`, { playerToken: currentRoom.playerToken });
-    renderRoom(room);
+    const path = currentRoom.kind === "group" ? "/api/groups/state" : "/api/state";
+    const room = await request(`${path}?${params}`, { playerToken: currentRoom.playerToken });
+    if (currentRoom !== session) return;
+    if (session.kind === "group") renderGroup(room);
+    else renderRoom(room);
   } catch (error) {
+    if (currentRoom !== session) return;
     showToast(error.message);
-    leaveRoom();
+    if (session.kind !== "group" || error.status === 404) leaveRoom();
   }
 }
 
 async function sendAction(action, extra = {}) {
   if (!currentRoom) return;
+  const session = currentRoom;
   try {
-    const room = await request("/api/action", {
+    const path = session.kind === "group" ? "/api/groups/action" : "/api/action";
+    const room = await request(path, {
       method: "POST",
-      body: JSON.stringify({ code: currentRoom.code, action, ...extra }),
-      playerToken: currentRoom.playerToken,
+      body: JSON.stringify({ code: session.code, action, ...extra }),
+      playerToken: session.playerToken,
     });
-    renderRoom(room);
+    if (currentRoom !== session) return;
+    if (session.kind === "group") renderGroup(room);
+    else renderRoom(room);
   } catch (error) {
     showToast(error.message);
   }
 }
 
 function playerWon(room) {
-  if (room.phase !== "finished") return false;
+  if (room.phase !== "finished" || room.you < 0 || room.gameState.abandoned) return false;
   const state = room.gameState;
   if (room.game === "hangman") {
     return typeof state.word === "string" && [...state.word].every((letter) => state.guesses.includes(letter));
@@ -609,45 +658,69 @@ function celebrateVictory() {
   }, 3400);
 }
 
+function renderGroup(group) {
+  if (group.round < groupRound) return;
+  groupRound = group.round;
+  const { room: gameRoom, ...groupInfo } = group;
+  const room = gameRoom || {
+    code: group.code,
+    game: "quiz",
+    phase: "lobby",
+    players: group.members.map((member, index) => ({ ...member, side: index })),
+    you: group.members.findIndex((member) => member.isYou),
+    gameState: {},
+  };
+  renderRoom({ ...room, group: groupInfo });
+}
+
 function renderRoom(room) {
   currentGame = room.game;
   currentPhase = room.phase;
+  currentSpectator = Boolean(room.group && room.group.round > 0 && room.you < 0);
   const signature = JSON.stringify(room);
   if (signature === lastRendered) return;
   lastRendered = signature;
-  const you = room.players[room.you];
+  const group = room.group;
+  const you = room.players[room.you] || (group ? { isHost: group.isHost } : null);
   if (!you) return;
   const gameName = translations[language].words[room.game][0];
   const won = playerWon(room);
-  const celebrate = won || (room.game === "tic-tac-toe" && room.phase === "finished" &&
+  const celebrate = won || (room.game === "tic-tac-toe" && room.phase === "finished" && !room.gameState.abandoned &&
     ["X", "O"].includes(room.gameState.winner));
-  if (celebrate && celebratedRoom !== room.code) {
-    celebratedRoom = room.code;
+  const celebrationKey = group ? `${room.code}:${group.round}` : room.code;
+  if (celebrate && celebratedRoom !== celebrationKey) {
+    celebratedRoom = celebrationKey;
     celebrateVictory();
   }
+  document.querySelector("#leave-button").textContent = group ? t("groupLeave") : t("backToGames");
+  const groupLobby = group && group.round === 0;
+  const memberList = group ? group.members : room.players.map((player, index) => ({ ...player, isYou: index === room.you }));
 
   roomContent.innerHTML = `
     <div class="room-heading">
-      <div class="eyebrow"><span>✦</span> ${escapeHtml(gameName)}</div>
-      <h1>${room.phase === "lobby" ? t("gameNight") : room.phase === "finished" ? t("gameOver") : t("letGamesBegin")}</h1>
+      <div class="eyebrow"><span>✦</span> ${escapeHtml(groupLobby ? t("groupLobby") : gameName)}</div>
+      <h1>${groupLobby ? t("groupLobby") : room.phase === "lobby" ? t("gameNight") : room.phase === "finished" ? t("gameOver") : t("letGamesBegin")}</h1>
       ${won ? `<div class="victory-badge"><span aria-hidden="true">✦</span> ${t("victory")} <span aria-hidden="true">✦</span></div>` : ""}
-      <p>${room.phase === "lobby" ? t("shareCode") : t(descriptionKeys[room.game])}</p>
-      <div class="room-code"><span>${t("taglineJoin")}</span><strong>${escapeHtml(room.code)}</strong><button id="copy-code">${t("copy")}</button></div>
-      ${room.phase === "lobby" ? `<div class="invite-share"><label for="invite-link">${t("inviteLink")}</label><div><input id="invite-link" type="text" readonly><button id="copy-link" class="button button-primary">${t("copyLink")}</button></div></div>` : ""}
+      <p>${groupLobby ? t("groupInvite") : room.phase === "lobby" ? t("shareCode") : t(descriptionKeys[room.game])}</p>
+      <div class="room-code"><span>${group ? t("groupCode") : t("taglineJoin")}</span><strong>${escapeHtml(room.code)}</strong><button id="copy-code">${t("copy")}</button></div>
+      ${group || room.phase === "lobby" ? `<div class="invite-share"><label for="invite-link">${t("inviteLink")}</label><div><input id="invite-link" type="text" readonly><button id="copy-link" class="button button-primary">${t("copyLink")}</button></div></div>` : ""}
     </div>
     <div class="room-layout">
-      <section class="play-card">${renderGame(room, you)}</section>
+      <section class="play-card">${groupLobby ? `<h3>${t("groupLobby")}</h3><p class="room-note">${t("groupWaiting")}</p>` : renderGame(room, you)}</section>
       <aside class="players-card">
-        <h3>${t("players")} <span>(${room.players.length})</span></h3>
-        ${room.players.map((player, index) => `
+        <h3>${group ? t("groupMembers") : t("players")} <span>(${memberList.length})</span></h3>
+        ${memberList.map((player) => `
           <div class="player-row">
             <span class="avatar">${escapeHtml(player.name.slice(0, 1).toUpperCase())}</span>
-            <span>${escapeHtml(player.name)}${index === room.you ? ` (${t("you")})` : ""}</span>
-            <span class="player-tag">${player.isHost ? t("host") : ["tic-tac-toe", "connect-four"].includes(room.game) ? player.mark : ""}</span>
+            <span>${escapeHtml(player.name)}${player.isYou ? ` (${t("you")})` : ""}</span>
+            <span class="player-tag">${group ? `${player.isHost ? `${t("host")} · ` : ""}${groupLobby ? "" : player.isPlaying ? t("groupPlaying") : t("groupSpectating")}` : player.isHost ? t("host") : ["tic-tac-toe", "connect-four"].includes(room.game) ? player.mark : ""}</span>
           </div>`).join("")}
-        ${room.phase === "lobby" ? `<p class="room-note">${room.players.length < 2 ? t("waitingFriend") : t("readyText")}</p>` : ""}
-        ${room.phase === "lobby" && you.isHost ? `<button id="start-game" class="button button-primary start-button" ${room.players.length < 2 ? "disabled" : ""}>${t("startGame")} <span>→</span></button>` : ""}
-        ${room.phase === "lobby" && !you.isHost ? `<p class="room-note">${t("hostStarts")}</p>` : ""}
+        ${!group && room.phase === "lobby" ? `<p class="room-note">${room.players.length < 2 ? t("waitingFriend") : t("readyText")}</p>` : ""}
+        ${!group && room.phase === "lobby" && you.isHost ? `<button id="start-game" class="button button-primary start-button" ${room.players.length < 2 ? "disabled" : ""}>${t("startGame")} <span>→</span></button>` : ""}
+        ${!group && room.phase === "lobby" && !you.isHost ? `<p class="room-note">${t("hostStarts")}</p>` : ""}
+        ${group && room.phase !== "playing" && group.isHost ? `<form id="group-game-form" class="group-game-form"><label for="group-game">${t("groupChoose")}</label><select id="group-game">${Object.keys(descriptionKeys).map((game) => `<option value="${game}">${escapeHtml(translations[language].words[game][0])}</option>`).join("")}</select><button class="button button-primary start-button" ${group.members.length < 2 ? "disabled" : ""}>${t("startGame")}</button></form>` : ""}
+        ${group && room.phase !== "playing" && !group.isHost ? `<p class="room-note">${t("groupWaiting")}</p>` : ""}
+        ${group && !groupLobby && room.you < 0 ? `<p class="room-note">${t("groupSpectating")}</p>` : ""}
       </aside>
     </div>`;
 
@@ -662,7 +735,7 @@ function renderRoom(room) {
   const inviteInput = roomContent.querySelector("#invite-link");
   if (inviteInput) {
     const inviteUrl = new URL("/", window.location.origin);
-    inviteUrl.searchParams.set("room", room.code);
+    inviteUrl.searchParams.set(group ? "group" : "room", room.code);
     inviteInput.value = inviteUrl.href;
     roomContent.querySelector("#copy-link").addEventListener("click", async () => {
       try {
@@ -676,6 +749,13 @@ function renderRoom(room) {
     });
   }
   roomContent.querySelector("#start-game")?.addEventListener("click", () => sendAction("start"));
+  roomContent.querySelector("#group-game-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendAction("select-game", { game: event.currentTarget.querySelector("select").value });
+  });
+  if (group && room.you < 0) {
+    roomContent.querySelectorAll(".play-card input, .play-card button").forEach((element) => { element.disabled = true; });
+  }
   roomContent.querySelector("#answer-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
     const input = event.currentTarget.elements.answer;
@@ -758,7 +838,7 @@ function renderGame(room, you) {
   }
   if (room.game === "connect-four") {
     const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
-    const turnText = state.winner ? message : `${t("turn")}: ${room.players[state.turn]?.name || "Player"}`;
+    const turnText = room.phase === "finished" ? message : `${t("turn")}: ${room.players[state.turn]?.name || "Player"}`;
     return `<div class="game-status">${escapeHtml(turnText)}</div>
       <div class="connect-board">${state.board.map((mark, index) => {
         const column = index % 7;
@@ -789,7 +869,7 @@ function renderGame(room, you) {
         `<span class="score-chip">${escapeHtml(player.name)}: ${t(state.choices[player.side])}</span>`).join("")}</div>` :
         state.playerHasChosen ? `<p class="game-help">${t("alreadyChosen")} ${state.choicesMade}/${room.players.length} · ${t("waitingForPlayers")}</p>` :
           `<p class="game-help">${t("choosePrompt")}</p><div class="rps-options">${options.map(([choice, key]) =>
-            `<button class="button button-light rps-button" data-choice="${choice}">${t(key)}</button>`).join("")}</div>`}
+            `<button class="button button-light rps-button" data-choice="${choice}" ${room.phase !== "playing" ? "disabled" : ""}>${t(key)}</button>`).join("")}</div>`}
       <div class="quiz-scores">${scores}</div>`;
   }
   if (room.game === "higher-lower") {
@@ -797,7 +877,7 @@ function renderGame(room, you) {
     return `<div class="game-status">${escapeHtml(message || `${t("round")}: ${state.round}/10`)}</div>
       <div class="higher-card"><p>${t("nextNumber")}</p><strong>${state.current}</strong>
         ${yourTurn ? `<div class="higher-options"><button class="button button-primary" data-guess="higher">${t("higher")}</button><button class="button button-dark" data-guess="lower">${t("lower")}</button></div>` :
-          `<p class="game-help">${t("turn")}: ${escapeHtml(room.players[state.turn]?.name || "")}</p>`}</div>
+          room.phase === "playing" ? `<p class="game-help">${t("turn")}: ${escapeHtml(room.players[state.turn]?.name || "")}</p>` : ""}</div>
       <div class="quiz-scores">${room.players.map((player) =>
         `<span class="score-chip">${escapeHtml(player.name)} · ${state.scores[player.side] || 0}</span>`).join("")}</div>`;
   }
@@ -813,7 +893,7 @@ function renderGame(room, you) {
         `<div class="battle-cell ${mark ? `battle-${mark}` : ""}" aria-label="${t("yourFleet")} ${index + 1}">${mark === "hit" ? "×" : mark === "miss" ? "·" : ""}</div>`).join("")}</div>`;
   }
   const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
-  const turnText = state.winner ? localizeMessage(room, state.message) :
+  const turnText = state.winner || state.abandoned ? localizeMessage(room, state.message) :
     `${t("turn")}: ${room.players[state.turn]?.name || "Player"} (${state.turn === 0 ? "X" : "O"})`;
   const winningLines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
   const winningCells = room.phase === "finished" && ["X", "O"].includes(state.winner)
@@ -861,7 +941,7 @@ function escapeHtml(value) {
 }
 
 function leaveRoom() {
-  if (currentRoom && currentGame === "pong" && currentPhase === "playing" && lastPaddleDirection !== 0) {
+  if (currentRoom && currentRoom.kind !== "group" && currentGame === "pong" && currentPhase === "playing" && lastPaddleDirection !== 0) {
     sendAction("paddle", { direction: 0 });
   }
   clearInterval(pollTimer);
@@ -872,6 +952,8 @@ function leaveRoom() {
   currentRoom = null;
   currentGame = "";
   currentPhase = "";
+  currentSpectator = false;
+  groupRound = 0;
   lastPaddleDirection = 0;
   pressedKeys.clear();
   sessionStorage.removeItem("play-together-room");
@@ -882,8 +964,8 @@ function leaveRoom() {
 function openEntry(entry) {
   pendingEntry = entry;
   document.querySelector("#name-prompt").textContent = entry.code
-    ? `${t("joiningRoom")} ${entry.code.toUpperCase()}.`
-    : `${t("startingGame")} ${translations[language].words[entry.game][0]}.`;
+    ? `${t(entry.kind === "group" ? "groupJoining" : "joiningRoom")} ${entry.code.toUpperCase()}.`
+    : entry.kind === "group" ? t("groupStarting") : `${t("startingGame")} ${translations[language].words[entry.game][0]}.`;
   customCodeGroup.classList.toggle("hidden", Boolean(entry.code));
   customCodeInput.disabled = Boolean(entry.code);
   customCodeInput.value = "";
@@ -896,6 +978,12 @@ function openEntry(entry) {
 
 document.querySelectorAll(".choose-button").forEach((button) => {
   button.addEventListener("click", () => openEntry({ game: button.dataset.game }));
+});
+
+document.querySelector("#create-group").addEventListener("click", () => openEntry({ kind: "group" }));
+document.querySelector("#join-group-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  openEntry({ kind: "group", code: document.querySelector("#join-group-code").value.trim() });
 });
 
 document.querySelector("#join-form").addEventListener("submit", async (event) => {
@@ -914,12 +1002,12 @@ document.querySelector("#name-form").addEventListener("submit", async (event) =>
   try {
     let room;
     if (entry.code) {
-      room = await request("/api/join", {
+      room = await request(entry.kind === "group" ? "/api/groups/join" : "/api/join", {
         method: "POST",
         body: JSON.stringify({ code: entry.code, name }),
       });
     } else {
-      room = await request("/api/rooms", {
+      room = await request(entry.kind === "group" ? "/api/groups" : "/api/rooms", {
         method: "POST",
         body: JSON.stringify({ name, game: entry.game, code: customCodeInput.value }),
       });
@@ -949,10 +1037,26 @@ nameDialog.addEventListener("cancel", () => {
   pendingEntry = null;
 });
 
-document.querySelector("#leave-button").addEventListener("click", leaveRoom);
+document.querySelector("#leave-button").addEventListener("click", async () => {
+  if (currentRoom?.kind === "group") {
+    const session = currentRoom;
+    try {
+      await request("/api/groups/action", {
+        method: "POST",
+        body: JSON.stringify({ code: session.code, action: "leave" }),
+        playerToken: session.playerToken,
+      });
+      if (currentRoom === session) leaveRoom();
+    } catch (error) {
+      showToast(error.message);
+    }
+    return;
+  }
+  leaveRoom();
+});
 
 function updatePaddle(event, direction) {
-  if (!currentRoom || currentGame !== "pong" || currentPhase !== "playing" ||
+  if (!currentRoom || currentSpectator || currentGame !== "pong" || currentPhase !== "playing" ||
     event.target instanceof HTMLElement && (event.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(event.target.tagName))) return;
   const key = event.key.toLowerCase();
   if (!["w", "s", "arrowup", "arrowdown"].includes(key)) return;
@@ -961,7 +1065,7 @@ function updatePaddle(event, direction) {
   else pressedKeys.add(key);
   const value = pressedKeys.has("w") || pressedKeys.has("arrowup") ? -1 :
     pressedKeys.has("s") || pressedKeys.has("arrowdown") ? 1 : 0;
-  if (currentRoom && currentGame === "pong" && currentPhase === "playing" &&
+  if (currentRoom && !currentSpectator && currentGame === "pong" && currentPhase === "playing" &&
     value !== lastPaddleDirection) {
     lastPaddleDirection = value;
     sendAction("paddle", { direction: value });
@@ -978,15 +1082,18 @@ window.addEventListener("blur", () => {
   }
 });
 
-const invitation = new URL(window.location.href).searchParams.get("room");
+const inviteParams = new URL(window.location.href).searchParams;
+const isGroupInvite = inviteParams.has("group");
+const invitation = inviteParams.get(isGroupInvite ? "group" : "room");
 if (invitation !== null) {
   const url = new URL(window.location.href);
   url.searchParams.delete("room");
+  url.searchParams.delete("group");
   window.history.replaceState(null, "", url);
   if (/^[A-Za-z0-9]{4,16}$/.test(invitation)) {
     const code = invitation.toUpperCase();
-    document.querySelector("#join-code").value = code;
-    openEntry({ code });
+    document.querySelector(isGroupInvite ? "#join-group-code" : "#join-code").value = code;
+    openEntry({ code, ...(isGroupInvite ? { kind: "group" } : {}) });
   } else {
     showToast(t("invalidInvite"));
   }

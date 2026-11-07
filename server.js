@@ -5,15 +5,23 @@ const { randomBytes, randomUUID, timingSafeEqual } = require("node:crypto");
 
 const publicDirectory = path.join(__dirname, "public");
 const rooms = new Map();
+const groups = new Map();
 const requestBuckets = new Map();
 const PORT = Number(process.env.PORT || 3000);
 if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new Error("PORT must be a valid TCP port.");
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_ROOMS = 500;
+const TWO_PLAYER_GAMES = ["pong", "tic-tac-toe", "connect-four", "memory-match", "battleship"];
+const GAMES = [
+  "quiz", "pong", "tic-tac-toe", "connect-four", "word-scramble",
+  "memory-match", "hangman", "rock-paper-scissors", "higher-lower",
+  "battleship", "reaction-race",
+];
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 const RATE_LIMITS = {
   default: { limit: 600, windowMs: 60_000 },
   state: { limit: 300, windowMs: 60_000 },
+  "group-state": { limit: 1000, windowMs: 60_000 },
   action: { limit: 180, windowMs: 60_000 },
   create: { limit: 8, windowMs: 10 * 60_000 },
   join: { limit: 25, windowMs: 10 * 60_000 },
@@ -113,11 +121,11 @@ function cleanName(value) {
   return [...value.replace(/[\u0000-\u001f\u007f]/g, "").trim()].slice(0, 20).join("");
 }
 
-function createCode() {
+function createCode(collection = rooms) {
   let code;
   do {
     code = randomBytes(8).toString("hex").toUpperCase();
-  } while (rooms.has(code));
+  } while (collection.has(code));
   return code;
 }
 
@@ -262,14 +270,15 @@ function publicRoom(room, playerId) {
     else gameState.choices = room.players.map((player) => gameState.choices[player.id]);
   }
   if (room.game === "battleship" && room.players.length === 2 && room.phase !== "lobby") {
-    const ownBoard = gameState.boards[playerId];
-    const opponentId = room.players.find((player) => player.id !== playerId)?.id;
+    const spectator = !room.players.some((player) => player.id === playerId);
+    const ownBoard = gameState.boards[spectator ? room.players[0].id : playerId];
+    const opponentId = spectator ? room.players[1].id : room.players.find((player) => player.id !== playerId)?.id;
     const targetBoard = gameState.boards[opponentId];
     gameState.ownBoard = Array.from({ length: 25 }, (_, index) => {
       const incomingShot = ownBoard.shots[index];
       if (incomingShot === "hit") return "hit";
       if (incomingShot === "miss") return "miss";
-      return ownBoard.ships.includes(index) ? "ship" : "";
+      return !spectator && ownBoard.ships.includes(index) ? "ship" : "";
     });
     gameState.targetBoard = Array.from({ length: 25 }, (_, index) => targetBoard.shots[index] || "");
     delete gameState.boards;
@@ -302,15 +311,107 @@ function publicRoom(room, playerId) {
   };
 }
 
-function findRoom(request, code) {
+function findRoom(request, code, collection = rooms) {
   const normalizedCode = typeof code === "string" ? code.trim().toUpperCase() : "";
-  const room = rooms.get(normalizedCode);
+  const room = collection.get(normalizedCode);
   if (!room) throw Object.assign(new Error("Room not found or access denied."), { status: 404 });
   const authorization = request.headers.authorization || "";
   const match = /^Bearer ([a-f0-9]{64})$/i.exec(authorization);
   const player = match && room.players.find((item) => isValidToken(match[1], item.token));
   if (!player) throw Object.assign(new Error("Room not found or access denied."), { status: 404 });
   return { room, player };
+}
+
+function publicGroup(group, playerId) {
+  return {
+    code: group.code,
+    members: group.players.map((member) => ({
+      name: member.name,
+      isHost: member.id === group.hostId,
+      isPlaying: Boolean(group.game && group.game.players.some((player) => player.id === member.id)),
+      isYou: member.id === playerId,
+    })),
+    isHost: group.hostId === playerId,
+    round: group.round,
+    room: group.game ? publicRoom(group.game, playerId) : null,
+  };
+}
+
+function chooseGroupPlayers(group, game) {
+  if (!TWO_PLAYER_GAMES.includes(game) || group.players.length === 2) {
+    return [...group.players];
+  }
+  const pairs = [];
+  for (let first = 0; first < group.players.length; first += 1) {
+    for (let second = first + 1; second < group.players.length; second += 1) {
+      const pair = [group.players[first], group.players[second]];
+      const key = pair.map((player) => player.id).sort().join(":");
+      if (group.pairStreak < 2 || key !== group.lastPair) pairs.push(pair);
+    }
+  }
+  return shuffled(shuffled(pairs)[0]);
+}
+
+function startGroupGame(group, game) {
+  if (!GAMES.includes(game)) throw Object.assign(new Error("Choose a valid game."), { status: 400 });
+  if (group.game && group.game.phase === "playing") {
+    throw Object.assign(new Error("Wait until the current game is finished."), { status: 409 });
+  }
+  if (group.players.length < 2) {
+    throw Object.assign(new Error("Invite at least one more player to start."), { status: 409 });
+  }
+  const players = chooseGroupPlayers(group, game);
+  const gameRoom = {
+    code: group.code, game, phase: "lobby", hostId: group.hostId,
+    players, gameState: makeGameState(game),
+  };
+  startRoom(gameRoom);
+  if (TWO_PLAYER_GAMES.includes(game)) {
+    const key = players.map((player) => player.id).sort().join(":");
+    group.pairStreak = key === group.lastPair ? group.pairStreak + 1 : 1;
+    group.lastPair = key;
+  } else {
+    group.lastPair = "";
+    group.pairStreak = 0;
+  }
+  group.game = gameRoom;
+  group.round += 1;
+}
+
+function removeGroupMember(group, player) {
+  group.players = group.players.filter((member) => member.id !== player.id);
+  if (group.hostId === player.id && group.players.length) group.hostId = group.players[0].id;
+  const room = group.game;
+  if (!room || room.phase !== "playing") return;
+  const index = room.players.findIndex((member) => member.id === player.id);
+  if (index < 0) return;
+  if (room.players.length <= 2 || TWO_PLAYER_GAMES.includes(room.game)) {
+    room.phase = "finished";
+    room.gameState.abandoned = true;
+    room.gameState.message = "A player left. This game has ended.";
+    return;
+  }
+  const state = room.gameState;
+  room.players.splice(index, 1);
+  if (state.scores) delete state.scores[player.id];
+  if (state.choices) delete state.choices[player.id];
+  if (typeof state.turn === "number") {
+    if (index < state.turn) state.turn -= 1;
+    else if (index === state.turn) state.turn %= room.players.length;
+  }
+  if (room.game === "rock-paper-scissors") resolveChoices(room);
+  if (room.game === "reaction-race") {
+    const remaining = room.players.filter((member) => !state.falseStarts.includes(member.id));
+    if (remaining.length === 1) {
+      state.winner = remaining[0].id;
+      state.message = `${remaining[0].name} wins!`;
+      room.phase = "finished";
+    } else if (!remaining.length) {
+      state.abandoned = true;
+      state.message = "A player left. This game has ended.";
+      room.phase = "finished";
+    }
+  }
 }
 
 function startRoom(room) {
@@ -329,6 +430,38 @@ function startRoom(room) {
   if (room.game === "reaction-race") {
     room.gameState.goAt = Date.now() + 2000 + Math.floor(Math.random() * 2500);
   }
+}
+
+function resolveChoices(room) {
+  const state = room.gameState;
+  if (state.answered || !room.players.every((item) => state.choices[item.id])) return;
+  state.answered = true;
+  const choices = [...new Set(room.players.map((item) => state.choices[item.id]))];
+  if (choices.length === 2) {
+    const [first, second] = choices;
+    const firstWins = (first === "rock" && second === "scissors") ||
+      (first === "paper" && second === "rock") ||
+      (first === "scissors" && second === "paper");
+    const winningChoice = firstWins ? first : second;
+    for (const current of room.players) {
+      if (state.choices[current.id] === winningChoice) state.scores[current.id] += 1;
+    }
+  }
+  state.message = "Round complete!";
+  setTimeout(() => {
+    if (room.phase !== "playing" || !state.answered) return;
+    if (state.round >= 5) {
+      room.phase = "finished";
+      const highScore = Math.max(...room.players.map((item) => state.scores[item.id]));
+      const winners = room.players.filter((item) => state.scores[item.id] === highScore);
+      state.message = winners.length > 1 ? "It's a tie!" : `${winners[0].name} wins!`;
+    } else {
+      state.round += 1;
+      state.choices = {};
+      state.answered = false;
+      state.message = "";
+    }
+  }, 1400);
 }
 
 function applyCommand(room, player, body) {
@@ -489,36 +622,7 @@ function applyCommand(room, player, body) {
     }
     if (state.choices[player.id]) return;
     state.choices[player.id] = body.choice;
-    if (!room.players.every((item) => state.choices[item.id])) return;
-    state.answered = true;
-    const choices = [...new Set(room.players.map((item) => state.choices[item.id]))];
-    if (choices.length === 2) {
-      const [first, second] = choices;
-      const firstWins = (first === "rock" && second === "scissors") ||
-        (first === "paper" && second === "rock") ||
-        (first === "scissors" && second === "paper");
-      const winningChoice = firstWins ? first : second;
-      for (const current of room.players) {
-        if (state.choices[current.id] === winningChoice) state.scores[current.id] += 1;
-      }
-    }
-    state.message = "Round complete!";
-    setTimeout(() => {
-      if (room.phase !== "playing" || !state.answered) return;
-      if (state.round >= 5) {
-        room.phase = "finished";
-        const highScore = Math.max(...room.players.map((item) => state.scores[item.id]));
-        const winners = room.players.filter((item) => state.scores[item.id] === highScore);
-        state.message = winners.length > 1
-          ? "It's a tie!"
-          : `${winners[0].name} wins!`;
-      } else {
-        state.round += 1;
-        state.choices = {};
-        state.answered = false;
-        state.message = "";
-      }
-    }, 1400);
+    resolveChoices(room);
     return;
   }
   if (body.action === "higher-lower") {
@@ -669,19 +773,76 @@ function updatePong(room) {
 
 async function handleApi(request, response, url) {
   try {
+    if (request.method === "POST" && url.pathname === "/api/groups") {
+      if (rooms.size + groups.size >= MAX_ROOMS) {
+        return sendJson(response, 503, { error: "The server is full. Please try again later." });
+      }
+      const body = await readJson(request);
+      const name = cleanName(body.name);
+      if (!name) return sendJson(response, 400, { error: "Enter a player name." });
+      let code;
+      if (body.code !== undefined && body.code !== "") {
+        if (typeof body.code !== "string" || !/^[A-Za-z0-9]{4,16}$/.test(body.code)) {
+          return sendJson(response, 400, { error: "Room code must contain 4 to 16 letters or numbers." });
+        }
+        code = body.code.toUpperCase();
+        if (groups.has(code)) return sendJson(response, 409, { error: "That room code is already in use." });
+      } else {
+        code = createCode(groups);
+      }
+      const player = createPlayer();
+      player.name = name;
+      const group = { code, hostId: player.id, players: [player], game: null, round: 0, lastPair: "", pairStreak: 0, createdAt: Date.now() };
+      groups.set(code, group);
+      return sendJson(response, 201, { ...publicGroup(group, player.id), playerToken: player.token });
+    }
+    if (request.method === "POST" && url.pathname === "/api/groups/join") {
+      const body = await readJson(request);
+      const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";
+      const group = groups.get(code);
+      const name = cleanName(body.name);
+      if (!name) return sendJson(response, 400, { error: "Enter a player name." });
+      if (!/^[A-Z0-9]{4,16}$/.test(code) || !group || group.players.length >= 8) {
+        return sendJson(response, 404, { error: "Group not found or unavailable." });
+      }
+      const player = createPlayer();
+      player.name = name;
+      group.players.push(player);
+      return sendJson(response, 201, { ...publicGroup(group, player.id), playerToken: player.token });
+    }
+    if (request.method === "GET" && url.pathname === "/api/groups/state") {
+      const { room: group, player } = findRoom(request, url.searchParams.get("code"), groups);
+      return sendJson(response, 200, publicGroup(group, player.id));
+    }
+    if (request.method === "POST" && url.pathname === "/api/groups/action") {
+      const body = await readJson(request);
+      const { room: group, player } = findRoom(request, body.code, groups);
+      if (body.action === "leave") {
+        removeGroupMember(group, player);
+        if (!group.players.length) groups.delete(group.code);
+        return sendJson(response, 200, { left: true });
+      }
+      if (body.action === "select-game") {
+        if (player.id !== group.hostId) throw Object.assign(new Error("Only the host can select a game."), { status: 403 });
+        startGroupGame(group, body.game);
+      } else {
+        if (!group.game || !group.game.players.some((member) => member.id === player.id)) {
+          throw Object.assign(new Error("Spectators cannot perform game actions."), { status: 403 });
+        }
+        if (body.action === "start") throw Object.assign(new Error("Action is not valid for this game."), { status: 400 });
+        applyCommand(group.game, player, body);
+      }
+      return sendJson(response, 200, publicGroup(group, player.id));
+    }
     if (request.method === "POST" && url.pathname === "/api/rooms") {
-      if (rooms.size >= MAX_ROOMS) {
+      if (rooms.size + groups.size >= MAX_ROOMS) {
         return sendJson(response, 503, { error: "The server is full. Please try again later." });
       }
       const body = await readJson(request);
       const name = cleanName(body.name);
       const game = body.game;
       if (!name) return sendJson(response, 400, { error: "Enter a player name." });
-      if (![
-        "quiz", "pong", "tic-tac-toe", "connect-four", "word-scramble",
-        "memory-match", "hangman", "rock-paper-scissors", "higher-lower",
-        "battleship", "reaction-race",
-      ].includes(game)) {
+      if (!GAMES.includes(game)) {
         return sendJson(response, 400, { error: "Choose a valid game." });
       }
       let code;
@@ -717,7 +878,7 @@ async function handleApi(request, response, url) {
       if (!/^[A-Z0-9]{4,16}$/.test(code) || !room || room.phase !== "lobby") {
         return sendJson(response, 404, { error: "Room not found or unavailable." });
       }
-      const capacity = ["pong", "tic-tac-toe", "connect-four", "memory-match", "battleship"].includes(room.game) ? 2 : 8;
+      const capacity = TWO_PLAYER_GAMES.includes(room.game) ? 2 : 8;
       if (room.players.length >= capacity) return sendJson(response, 404, { error: "Room not found or unavailable." });
       const player = createPlayer();
       player.name = name;
@@ -756,10 +917,11 @@ const server = http.createServer((request, response) => {
     return sendJson(response, 400, { error: "Invalid request URL." });
   }
   if (url.pathname.startsWith("/api/")) {
-    const route = request.method === "GET" && url.pathname === "/api/state" ? "state" :
-      request.method === "POST" && url.pathname === "/api/action" ? "action" :
-        request.method === "POST" && url.pathname === "/api/rooms" ? "create" :
-          request.method === "POST" && url.pathname === "/api/join" ? "join" : "default";
+    const route = request.method === "GET" && url.pathname === "/api/groups/state" ? "group-state" :
+      request.method === "GET" && url.pathname === "/api/state" ? "state" :
+      request.method === "POST" && ["/api/action", "/api/groups/action"].includes(url.pathname) ? "action" :
+        request.method === "POST" && ["/api/rooms", "/api/groups"].includes(url.pathname) ? "create" :
+          request.method === "POST" && ["/api/join", "/api/groups/join"].includes(url.pathname) ? "join" : "default";
     const retryAfter = enforceRateLimit(request, route);
     if (retryAfter) return rateLimitResponse(response, retryAfter);
     if (request.method === "POST" && !/^application\/json(?:\s*;|$)/i.test(request.headers["content-type"] || "")) {
@@ -788,12 +950,21 @@ setInterval(() => {
   const now = Date.now();
   for (const [code, room] of rooms) {
     if (now - room.createdAt >= 6 * 60 * 60 * 1000) rooms.delete(code);
-    else updatePong(room);
+  }
+  for (const [code, group] of groups) {
+    if (now - group.createdAt >= 6 * 60 * 60 * 1000) groups.delete(code);
   }
   for (const [key, bucket] of requestBuckets) {
     if (now >= bucket.resetAt) requestBuckets.delete(key);
   }
 }, 60_000);
+
+setInterval(() => {
+  for (const room of rooms.values()) updatePong(room);
+  for (const group of groups.values()) {
+    if (group.game) updatePong(group.game);
+  }
+}, 16);
 
 server.listen(PORT, () => {
   console.log(`Play Together is ready at http://localhost:${PORT}`);
