@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111827">
+    <title>Play Together — Online Game Night</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Play Together home"><span class="brand-mark">P</span> play together</a>
+        <div class="topbar-actions">
+          <label class="sr-only" for="language-select" data-i18n="selectLanguage">Select language</label>
+          <select id="language-select" aria-label="Select language">
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="zh">简体中文</option>
+            <option value="es">Español</option>
+          </select>
+          <span class="online-label"><span class="online-dot"></span> <span data-i18n="tagline">YOUR NEXT GAME NIGHT</span></span>
+        </div>
+      </header>
+
+      <section id="home-screen" class="home-screen">
+        <div class="hero">
+          <div class="eyebrow"><span>✦</span> <span data-i18n="heroEyebrow">TEN WAYS TO PLAY</span></div>
+          <h1><span class="hero-first" data-i18n="heroFirst">Good games.</span><br><span data-i18n="heroSecond">Better together.</span></h1>
+          <p data-i18n="heroDescription">Pick a game, invite your people, and let the fun happen. No downloads, no fuss.</p>
+        </div>
+
+        <section class="game-grid" aria-label="Choose a game" data-i18n-aria="chooseGame">
+          <article class="game-card quiz-card">
+            <div class="card-icon" aria-hidden="true">💬</div>
+            <div class="card-meta"><span data-i18n="party">PARTY</span><span data-i18n="players2to8">2–8 PLAYERS</span></div>
+            <h2>Quick Quiz</h2>
+            <p>Race your friends to the right answer. Rack up points across five quick questions.</p>
+            <button class="choose-button" data-game="quiz">Play Quick Quiz <span>↗</span></button>
+          </article>
+          <article class="game-card pong-card">
+            <div class="card-icon" aria-hidden="true">🏓</div>
+            <div class="card-meta"><span data-i18n="arcade">ARCADE</span><span data-i18n="players2">2 PLAYERS</span></div>
+            <h2>Paddle Clash</h2>
+            <p>A tiny court, one speedy ball, and one very important question: who has the reflexes?</p>
+            <button class="choose-button" data-game="pong">Play Paddle Clash <span>↗</span></button>
+          </article>
+          <article class="game-card tic-card">
+            <div class="card-icon" aria-hidden="true">✕</div>
+            <div class="card-meta"><span data-i18n="strategy">STRATEGY</span><span data-i18n="players2">2 PLAYERS</span></div>
+            <h2>Tic-Tac-Toe</h2>
+            <p>An old-school classic. Make your line, block theirs, and never underestimate the center.</p>
+            <button class="choose-button" data-game="tic-tac-toe">Play Tic-Tac-Toe <span>↗</span></button>
+          </article>
+          <article class="game-card connect-card">
+            <div class="card-icon" aria-hidden="true">🔴</div>
+            <div class="card-meta"><span data-i18n="strategy">STRATEGY</span><span data-i18n="players2">2 PLAYERS</span></div>
+            <h2>Connect Four</h2>
+            <p>Drop your discs into the grid and connect four before your opponent does.</p>
+            <button class="choose-button" data-game="connect-four">Play Connect Four <span>↗</span></button>
+          </article>
+          <article class="game-card scramble-card">
+            <div class="card-icon" aria-hidden="true">🔤</div>
+            <div class="card-meta"><span data-i18n="party">PARTY</span><span data-i18n="players2to8">2–8 PLAYERS</span></div>
+            <h2>Word Scramble</h2>
+            <p>Race to untangle five scrambled words. Quick thinking scores the points.</p>
+            <button class="choose-button" data-game="word-scramble">Play Word Scramble <span>↗</span></button>
+          </article>
+          <article class="game-card memory-card">
+            <div class="card-icon" aria-hidden="true">🧠</div>
+            <div class="card-meta"><span data-i18n="strategy">STRATEGY</span><span data-i18n="players2">2 PLAYERS</span></div>
+            <h2>Memory Match</h2>
+            <p>Flip cards, find pairs, and see who can remember where everything is hiding.</p>
+            <button class="choose-button" data-game="memory-match">Play Memory Match <span>↗</span></button>
+          </article>
+          <article class="game-card hangman-card">
+            <div class="card-icon" aria-hidden="true">🔠</div>
+            <div class="card-meta"><span data-i18n="party">PARTY</span><span data-i18n="players2to8">2–8 PLAYERS</span></div>
+            <h2>Hangman Team</h2>
+            <p>Work together to uncover the hidden word before you run out of guesses.</p>
+            <button class="choose-button" data-game="hangman">Play Hangman <span>↗</span></button>
+          </article>
+          <article class="game-card rps-card">
+            <div class="card-icon" aria-hidden="true">✊</div>
+            <div class="card-meta"><span data-i18n="party">PARTY</span><span data-i18n="players2to8">2–8 PLAYERS</span></div>
+            <h2>Rock Paper Scissors</h2>
+            <p>Lock in your choice each round. Score points across five simultaneous showdowns.</p>
+            <button class="choose-button" data-game="rock-paper-scissors">Play Rock Paper Scissors <span>↗</span></button>
+          </article>
+          <article class="game-card higher-card">
+            <div class="card-icon" aria-hidden="true">↗</div>
+            <div class="card-meta"><span data-i18n="party">PARTY</span><span data-i18n="players2to8">2–8 PLAYERS</span></div>
+            <h2>Higher or Lower</h2>
+            <p>Take turns predicting the next number. How long can your group keep the streak alive?</p>
+            <button class="choose-button" data-game="higher-lower">Play Higher or Lower <span>↗</span></button>
+          </article>
+          <article class="game-card battleship-card">
+            <div class="card-icon" aria-hidden="true">🚢</div>
+            <div class="card-meta"><span data-i18n="strategy">STRATEGY</span><span data-i18n="players2">2 PLAYERS</span></div>
+            <h2>Battleship</h2>
+            <p>Take turns searching the grid. Find and sink all four hidden ship cells to win.</p>
+            <button class="choose-button" data-game="battleship">Play Battleship <span>↗</span></button>
+          </article>
+          <article class="game-card reaction-card">
+            <div class="card-icon" aria-hidden="true">⚡</div>
+            <div class="card-meta"><span data-i18n="party">PARTY</span><span data-i18n="players2to8">2–8 PLAYERS</span></div>
+            <h2>Reaction Race</h2>
+            <p>Wait for the signal, then tap fast. Who's got the quickest reflexes?</p>
+            <button class="choose-button" data-game="reaction-race">Play Reaction Race <span>↗</span></button>
+          </article>
+        </section>
+
+        <section class="join-panel">
+          <div>
+            <h2 data-i18n="alreadyHaveRoom">Already have a room?</h2>
+            <p data-i18n="enterRoomCode">Enter your friend's room code and jump right in.</p>
+          </div>
+          <form id="join-form" class="join-form">
+            <label class="sr-only" for="join-code" data-i18n="roomCodeLabel">ROOM CODE</label>
+            <input id="join-code" maxlength="16" pattern="[A-Fa-f0-9]{16}" placeholder="ROOM CODE" autocomplete="off" required>
+            <button class="button button-dark" type="submit"><span data-i18n="joinRoom">Join room</span> <span>→</span></button>
+          </form>
+        </section>
+        <footer><span data-i18n="footer">MADE FOR FRIENDS, WHEREVER THEY ARE</span> <span>✦</span></footer>
+      </section>
+
+      <section id="room-screen" class="room-screen hidden" aria-live="polite">
+        <button id="leave-button" class="back-button" data-i18n="backToGames">← Back to games</button>
+        <div id="room-content"></div>
+      </section>
+      <dialog id="name-dialog" class="name-dialog">
+        <form id="name-form">
+          <div class="eyebrow"><span>✦</span> YOUR GAME NIGHT</div>
+          <h2 data-i18n="nameHeading">What should we call you?</h2>
+          <p id="name-prompt" data-i18n="namePrompt">Choose a name your friends will recognize.</p>
+          <label for="player-name" data-i18n="playerName">PLAYER NAME</label>
+          <input id="player-name" class="name-input" maxlength="20" autocomplete="nickname" required>
+          <div class="dialog-actions">
+            <button id="cancel-name" class="button button-light" type="button" data-i18n="cancel">Cancel</button>
+            <button class="button button-primary" type="submit"><span data-i18n="continue">Continue</span> <span>→</span></button>
+          </div>
+        </form>
+      </dialog>
+      <div id="toast" class="toast hidden" role="status"></div>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

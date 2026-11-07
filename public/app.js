@@ -1,0 +1,867 @@
+const translations = {
+  en: {
+    selectLanguage: "Select language", pageTitle: "Play Together — Online Game Night", roomCodePlaceholder: "ROOM CODE",
+    roomCodeLabel: "ROOM CODE", chooseGame: "Choose a game",
+    tagline: "YOUR NEXT GAME NIGHT",
+    heroEyebrow: "TEN WAYS TO PLAY", heroFirst: "Good games.", heroSecond: "Better together.",
+    heroDescription: "Pick a game, invite your people, and let the fun happen. No downloads, no fuss.",
+    party: "PARTY", arcade: "ARCADE", strategy: "STRATEGY", players2to8: "2–8 PLAYERS", players2: "2 PLAYERS",
+    alreadyHaveRoom: "Already have a room?", enterRoomCode: "Enter your friend's room code and jump right in.",
+    joinRoom: "Join room", footer: "MADE FOR FRIENDS, WHEREVER THEY ARE",
+    backToGames: "← Back to games", nameHeading: "What should we call you?",
+    namePrompt: "Choose a name your friends will recognize.", playerName: "PLAYER NAME",
+    cancel: "Cancel", continue: "Continue", taglineJoin: "ROOM CODE", copy: "Copy",
+    startingGame: "You're starting a game of", joiningRoom: "Joining room",
+    gameNight: "Game night starts here.", letGamesBegin: "Let the games begin.", gameOver: "Game over!",
+    shareCode: "Share your room code, then kick things off when everyone's in.",
+    readyText: "Ready when you are!", waitingFriend: "Waiting for a friend to join…",
+    hostStarts: "The host will start the game when ready.", players: "Players",
+    host: "HOST", you: "you", startGame: "Start game", waitingRoom: "Waiting room",
+    inviteInstructions: "Send the room code to a friend. Once at least two players are here, the host can start the game.",
+    needPlayer: "Need one more player to start", readyToPlay: "Ready to play!",
+    firstToAnswer: "FIRST TO ANSWER WINS THE POINT", firstToFive: "First to five points wins.",
+    quizFirst: "Race to answer five questions.", quizDesc: "Fastest fingers win. Get the answer right before your friends do!",
+    quizWinDesc: "Race your friends to the right answer. Rack up points across five quick questions.",
+    pongDesc: "First to five points wins. Use W/S or ↑/↓ to move your paddle.",
+    ticDesc: "Take turns placing your mark. Get three in a row to win.",
+    connectDesc: "Take turns dropping discs. Connect four in a row to win.",
+    scrambleDesc: "Race to unscramble five words. Fastest correct answer scores!",
+    memoryDesc: "Find matching pairs. The player with the most pairs wins.",
+    hangmanDesc: "Work together to uncover the hidden word before you run out of guesses.",
+    rpsDesc: "Lock in your choice each round. Score points across five simultaneous showdowns.",
+    higherDesc: "Take turns predicting the next number. How long can your group keep the streak alive?",
+    battleshipDesc: "Take turns searching the grid. Find and sink all four hidden ship cells to win.",
+    reactionDesc: "Wait for the signal and tap quickly. Who reacts first?",
+    falseStarts: "false starts",
+    falseStart: "False start!",
+    answerPlaceholder: "Type your answer…", send: "Send", wordPlaceholder: "Type the word…", solve: "Solve",
+    unscramble: "UNSCRAMBLE THE WORD", word: "WORD", of: "OF", scores: "SCORES",
+    yourTurn: "Your turn", waitingForPlayers: "Waiting for everyone to choose…",
+    choosePrompt: "Choose one:", rock: "Rock", paper: "Paper", scissors: "Scissors",
+    waitingGo: "Wait for the green signal…", go: "GO!", tapNow: "Tap now!",
+    fireInstructions: "Fire at a square on your opponent's grid.", yourFleet: "Your fleet",
+    opponentGrid: "Opponent's waters", turn: "Turn", noMatch: "No match. Next player's turn.",
+    matchedPair: "Pair found! Take another turn.", matchCards: "Find all the pairs!",
+    guessLetter: "Guess a letter", guessesLeft: "Wrong guesses", higher: "Higher", lower: "Lower",
+    nextNumber: "Will the next number be higher or lower?", round: "ROUND", ofFive: "OF 5",
+    numberRound: "Correct guesses", hit: "Hit", miss: "Miss", alreadyChosen: "Choice locked in!",
+    words: {
+      quiz: ["Quick Quiz", "Race your friends to the right answer. Rack up points across five quick questions.", "Play Quick Quiz"],
+      pong: ["Paddle Clash", "A tiny court, one speedy ball, and one very important question: who has the reflexes?", "Play Paddle Clash"],
+      "tic-tac-toe": ["Tic-Tac-Toe", "An old-school classic. Make your line, block theirs, and never underestimate the center.", "Play Tic-Tac-Toe"],
+      "connect-four": ["Connect Four", "Drop your discs into the grid and connect four before your opponent does.", "Play Connect Four"],
+      "word-scramble": ["Word Scramble", "Race to untangle five scrambled words. Quick thinking scores the points.", "Play Word Scramble"],
+      "memory-match": ["Memory Match", "Flip cards, find pairs, and see who can remember where everything is hiding.", "Play Memory Match"],
+      hangman: ["Hangman Team", "Work together to uncover the hidden word before you run out of guesses.", "Play Hangman"],
+      "rock-paper-scissors": ["Rock Paper Scissors", "Lock in your choice each round. Score points across five simultaneous showdowns.", "Play Rock Paper Scissors"],
+      "higher-lower": ["Higher or Lower", "Take turns predicting the next number. How long can your group keep the streak alive?", "Play Higher or Lower"],
+      battleship: ["Battleship", "Take turns searching the grid. Find and sink all four hidden ship cells to win.", "Play Battleship"],
+      "reaction-race": ["Reaction Race", "Wait for the signal, then tap fast. Who's got the quickest reflexes?", "Play Reaction Race"],
+    },
+    quizQuestions: [
+      "What is the largest planet in our solar system?",
+      "How many sides does a hexagon have?",
+      "What is the capital of Japan?",
+      "Which ocean is the largest?",
+      "What is 9 × 7?",
+    ],
+    incorrect: "Not quite. Try again!", noPair: "No match. Next player's turn.",
+    pairFound: "found a pair!", solved: "You solved it! Nice teamwork.",
+    roundComplete: "Round complete!", draw: "It's a draw!", hitMessage: "scored a hit!",
+    missed: "missed.", fleetWins: "sank the fleet and wins!",
+    guessedRight: "guessed right!", notQuite: "Not quite! The number was",
+    winsQuiz: "wins the quiz!", winsScramble: "wins the word scramble!",
+    wordWas: "The word was", winSuffix: "wins!",
+  },
+  zh: {
+    selectLanguage: "选择语言", pageTitle: "一起玩 — 在线游戏之夜", roomCodePlaceholder: "房间码",
+    roomCodeLabel: "房间码", chooseGame: "选择游戏",
+    tagline: "开启下一场游戏之夜",
+    heroEyebrow: "十种玩法", heroFirst: "好游戏，", heroSecond: "一起玩更开心。",
+    heroDescription: "选个游戏，邀请朋友，马上开始。无需下载，简单又好玩。",
+    party: "派对", arcade: "街机", strategy: "策略", players2to8: "2–8 名玩家", players2: "2 名玩家",
+    alreadyHaveRoom: "已经有房间了？", enterRoomCode: "输入朋友的房间码，马上加入。",
+    joinRoom: "加入房间", footer: "为朋友而造，无论相隔多远",
+    backToGames: "← 返回游戏", nameHeading: "怎么称呼你？",
+    namePrompt: "起个朋友们能认出的名字。", playerName: "玩家名称",
+    cancel: "取消", continue: "继续", taglineJoin: "房间码", copy: "复制",
+    startingGame: "你将开始游戏：", joiningRoom: "正在加入房间",
+    gameNight: "游戏之夜，从这里开始。", letGamesBegin: "游戏开始！", gameOver: "游戏结束！",
+    shareCode: "把房间码发给朋友，人齐了就开始。", readyText: "准备好了就开始！",
+    waitingFriend: "正在等朋友加入…", hostStarts: "房主准备好后就会开始游戏。",
+    players: "玩家", host: "房主", you: "你", startGame: "开始游戏",
+    waitingRoom: "等待室", inviteInstructions: "把房间码发给朋友。至少两名玩家加入后，房主即可开始。",
+    needPlayer: "还需要一位玩家才能开始", readyToPlay: "准备开玩！",
+    firstToAnswer: "抢先答对即可得分", firstToFive: "先得五分者获胜。",
+    quizFirst: "抢答五道题。", quizDesc: "眼疾手快，抢在朋友前答对！",
+    quizWinDesc: "和朋友比拼答题速度，五道快问快答，赢取积分。",
+    pongDesc: "先得五分者获胜。使用 W/S 或 ↑/↓ 移动球拍。",
+    ticDesc: "轮流落子，率先连成三子获胜。", connectDesc: "轮流投放棋子，率先连成四子获胜。",
+    scrambleDesc: "抢先解开五个字母谜题，答对即可得分。",
+    memoryDesc: "翻牌寻找配对，找到最多配对的玩家获胜。",
+    hangmanDesc: "大家一起猜出隐藏单词，在机会用完前完成挑战。",
+    rpsDesc: "每轮同时出拳，五轮对决赢取积分。",
+    higherDesc: "轮流猜下一个数字更大还是更小，看看能连对多少次。",
+    battleshipDesc: "轮流搜索海域，找到并击沉四个舰船位置即可获胜。",
+    reactionDesc: "等待信号后快速点击，看看谁反应最快。",
+    answerPlaceholder: "输入答案…", send: "发送", wordPlaceholder: "输入单词…", solve: "提交",
+    unscramble: "还原这个单词", word: "单词", of: "共", scores: "积分",
+    yourTurn: "轮到你了", waitingForPlayers: "等待所有玩家选择…",
+    choosePrompt: "选择一个：", rock: "石头", paper: "布", scissors: "剪刀",
+    waitingGo: "等待绿色信号…", go: "开始！", tapNow: "现在点击！",
+    fireInstructions: "点击对手海域中的格子开火。", yourFleet: "你的舰队",
+    opponentGrid: "对手海域", turn: "轮到", noMatch: "没有配对，轮到下一位玩家。",
+    matchedPair: "配对成功！再来一次。", matchCards: "找出所有配对！",
+    guessLetter: "猜一个字母", guessesLeft: "错误次数", higher: "更大", lower: "更小",
+    nextNumber: "下一个数字会更大还是更小？", round: "回合", ofFive: "共 5 轮",
+    numberRound: "答对次数", hit: "命中", miss: "未命中", alreadyChosen: "已锁定选择！",
+    words: {
+      quiz: ["快速问答", "和朋友比拼答题速度，五道快问快答，赢取积分。", "玩快速问答"],
+      pong: ["球拍对决", "小小球场，飞速弹球，谁的反应更快？", "玩球拍对决"],
+      "tic-tac-toe": ["井字棋", "经典对弈，率先连成三子获胜。", "玩井字棋"],
+      "connect-four": ["四子棋", "轮流投放棋子，率先连成四子获胜。", "玩四子棋"],
+      "word-scramble": ["字母拼词", "抢先解开五个字母谜题，答对即可得分。", "玩字母拼词"],
+      "memory-match": ["记忆配对", "翻牌寻找配对，找到最多配对的玩家获胜。", "玩记忆配对"],
+      hangman: ["团队猜词", "大家一起猜出隐藏单词，在机会用完前完成挑战。", "玩团队猜词"],
+      "rock-paper-scissors": ["石头剪刀布", "每轮同时出拳，五轮对决赢取积分。", "玩石头剪刀布"],
+      "higher-lower": ["猜大猜小", "轮流猜下一个数字更大还是更小，看看能连对多少次。", "玩猜大猜小"],
+      battleship: ["海战棋", "轮流搜索海域，找到并击沉四个舰船位置即可获胜。", "玩海战棋"],
+      "reaction-race": ["反应赛跑", "等待信号，然后快速点击。看看谁反应最快！", "开始反应赛跑"],
+    },
+    quizQuestions: [
+      "太阳系中最大的行星是什么？",
+      "六边形有几条边？",
+      "日本的首都是哪里？",
+      "哪个海洋面积最大？",
+      "9 × 7 等于多少？",
+    ],
+    incorrect: "不太对，再试一次！", noPair: "没有配对，轮到下一位玩家。",
+    pairFound: "找到了配对！", solved: "猜对了，团队合作真棒！",
+    roundComplete: "本轮结束！", draw: "平局！", hitMessage: "命中！",
+    missed: "未命中。", fleetWins: "击沉舰队，赢得比赛！",
+    guessedRight: "猜对了！", notQuite: "不太对！数字是",
+    winsQuiz: "赢得了问答比赛！", winsScramble: "赢得了拼词比赛！",
+    wordWas: "单词是", winSuffix: "获胜！",
+    falseStart: "抢跑了！", reacted: "反应最快！", falseStarts: "次抢跑",
+  },
+  es: {
+    selectLanguage: "Elegir idioma", pageTitle: "Juega en compañía — Noche de juegos en línea", roomCodePlaceholder: "CÓDIGO",
+    roomCodeLabel: "CÓDIGO", chooseGame: "Elige un juego",
+    tagline: "TU PRÓXIMA NOCHE DE JUEGOS",
+    heroEyebrow: "DIEZ FORMAS DE JUGAR", heroFirst: "Buenos juegos.", heroSecond: "Mejor en compañía.",
+    heroDescription: "Elige un juego, invita a tus amigos y ¡a jugar! Sin descargas ni complicaciones.",
+    party: "FIESTA", arcade: "ARCADE", strategy: "ESTRATEGIA", players2to8: "2–8 JUGADORES", players2: "2 JUGADORES",
+    alreadyHaveRoom: "¿Ya tienes una sala?", enterRoomCode: "Introduce el código de tu amigo y únete.",
+    joinRoom: "Unirse", footer: "HECHO PARA AMIGOS, ESTÉN DONDE ESTÉN",
+    backToGames: "← Volver a los juegos", nameHeading: "¿Cómo te llamas?",
+    namePrompt: "Elige un nombre que tus amigos reconozcan.", playerName: "NOMBRE",
+    cancel: "Cancelar", continue: "Continuar", taglineJoin: "CÓDIGO", copy: "Copiar",
+    startingGame: "Vas a empezar una partida de", joiningRoom: "Uniéndote a la sala",
+    gameNight: "La noche de juegos empieza aquí.", letGamesBegin: "¡Que empiece el juego!", gameOver: "¡Fin del juego!",
+    shareCode: "Comparte el código y empieza cuando todos estén aquí.", readyText: "¡Listos para jugar!",
+    waitingFriend: "Esperando a un amigo…", hostStarts: "El anfitrión empezará cuando esté listo.",
+    players: "Jugadores", host: "ANFITRIÓN", you: "tú", startGame: "Empezar",
+    waitingRoom: "Sala de espera", inviteInstructions: "Comparte el código. El anfitrión puede empezar cuando haya al menos dos jugadores.",
+    needPlayer: "Hace falta otro jugador", readyToPlay: "¡A jugar!",
+    firstToAnswer: "QUIEN RESPONDA PRIMERO GANA EL PUNTO", firstToFive: "Gana quien llegue a cinco puntos.",
+    quizFirst: "Responde cinco preguntas.", quizDesc: "¡Responde antes que tus amigos!",
+    quizWinDesc: "Compite con tus amigos y suma puntos en cinco preguntas rápidas.",
+    pongDesc: "Gana quien llegue a cinco puntos. Usa W/S o ↑/↓ para mover la pala.",
+    ticDesc: "Alternad turnos. ¡Tres en raya gana!", connectDesc: "Conecta cuatro fichas seguidas para ganar.",
+    scrambleDesc: "Descifra cinco palabras. ¡La respuesta más rápida suma puntos!",
+    memoryDesc: "Encuentra parejas. Gana quien encuentre más.",
+    hangmanDesc: "Adivinad la palabra juntos antes de quedaros sin intentos.",
+    rpsDesc: "Elige a la vez en cinco rondas y suma puntos.",
+    higherDesc: "Adivina si el próximo número será mayor o menor. ¿Cuánto durará la racha?",
+    battleshipDesc: "Busca por turnos. Encuentra las cuatro casillas de barcos para ganar.",
+    reactionDesc: "Espera la señal y pulsa rápido. ¿Quién reacciona primero?",
+    answerPlaceholder: "Escribe tu respuesta…", send: "Enviar", wordPlaceholder: "Escribe la palabra…", solve: "Resolver",
+    unscramble: "DESCIFRA LA PALABRA", word: "PALABRA", of: "DE", scores: "PUNTOS",
+    yourTurn: "Tu turno", waitingForPlayers: "Esperando a que todos elijan…",
+    choosePrompt: "Elige una:", rock: "Piedra", paper: "Papel", scissors: "Tijeras",
+    waitingGo: "Espera la señal verde…", go: "¡YA!", tapNow: "¡Pulsa ahora!",
+    fireInstructions: "Dispara a una casilla de la cuadrícula rival.", yourFleet: "Tu flota",
+    opponentGrid: "Aguas rivales", turn: "Turno", noMatch: "No hay pareja. Turno del siguiente jugador.",
+    matchedPair: "¡Pareja encontrada! Juega otra vez.", matchCards: "¡Encuentra todas las parejas!",
+    guessLetter: "Adivina una letra", guessesLeft: "Fallos", higher: "Mayor", lower: "Menor",
+    nextNumber: "¿El siguiente número será mayor o menor?", round: "RONDA", ofFive: "DE 5",
+    numberRound: "Aciertos", hit: "Tocado", miss: "Agua", alreadyChosen: "¡Elección guardada!",
+    words: {
+      quiz: ["Concurso rápido", "Compite con tus amigos y suma puntos en cinco preguntas rápidas.", "Jugar al concurso"],
+      pong: ["Duelo de palas", "Una pista pequeña, una pelota veloz: ¿quién tiene mejores reflejos?", "Jugar al duelo"],
+      "tic-tac-toe": ["Tres en raya", "El clásico. ¡Consigue tres en línea para ganar!", "Jugar al tres en raya"],
+      "connect-four": ["Conecta cuatro", "Conecta cuatro fichas seguidas antes que tu rival.", "Jugar a conecta cuatro"],
+      "word-scramble": ["Palabras revueltas", "Descifra cinco palabras. ¡La respuesta más rápida suma puntos!", "Jugar a palabras"],
+      "memory-match": ["Parejas", "Encuentra parejas. Gana quien encuentre más.", "Jugar a parejas"],
+      hangman: ["Ahorcado en equipo", "Adivinad la palabra juntos antes de quedaros sin intentos.", "Jugar al ahorcado"],
+      "rock-paper-scissors": ["Piedra, papel o tijeras", "Elige a la vez en cinco rondas y suma puntos.", "Jugar a piedra, papel"],
+      "higher-lower": ["Mayor o menor", "Adivina si el próximo número será mayor o menor.", "Jugar a mayor o menor"],
+      battleship: ["Batalla naval", "Busca por turnos y encuentra los cuatro barcos para ganar.", "Jugar a batalla naval"],
+      "reaction-race": ["Carrera de reflejos", "Espera la señal y pulsa rápido. ¿Quién tiene mejores reflejos?", "Jugar a la carrera"],
+    },
+    quizQuestions: [
+      "¿Cuál es el planeta más grande del sistema solar?",
+      "¿Cuántos lados tiene un hexágono?",
+      "¿Cuál es la capital de Japón?",
+      "¿Cuál es el océano más grande?",
+      "¿Cuánto es 9 × 7?",
+    ],
+    incorrect: "No exactamente. ¡Inténtalo de nuevo!", noPair: "No hay pareja. Turno del siguiente jugador.",
+    pairFound: "¡Pareja encontrada!", solved: "¡Lo resolvisteis! Buen trabajo en equipo.",
+    roundComplete: "¡Ronda completada!", draw: "¡Empate!", hitMessage: "¡Tocado!",
+    missed: "Agua.", fleetWins: "¡Hundió la flota y ganó!",
+    guessedRight: "¡Acertó!", notQuite: "No exactamente. El número era",
+    winsQuiz: "¡gana el concurso!", winsScramble: "¡gana las palabras revueltas!",
+    wordWas: "La palabra era", winSuffix: "¡gana!",
+    falseStart: "se adelantó a la señal.", reacted: "reaccionó primero.", falseStarts: "salidas falsas",
+  },
+};
+
+translations.de = {
+  ...translations.en,
+  selectLanguage: "Sprache auswählen",
+  pageTitle: "Play Together — Online-Spieleabend",
+  roomCodePlaceholder: "RAUMCODE",
+  roomCodeLabel: "RAUMCODE",
+  chooseGame: "Spiel auswählen",
+  tagline: "DEIN NÄCHSTER SPIELEABEND",
+  heroEyebrow: "ZEHN SPIELMÖGLICHKEITEN",
+  heroFirst: "Gute Spiele.",
+  heroSecond: "Zusammen noch besser.",
+  heroDescription: "Such dir ein Spiel aus, lade deine Freunde ein und legt los. Ohne Download, ganz einfach.",
+  party: "PARTY",
+  arcade: "ARCADE",
+  strategy: "STRATEGIE",
+  players2to8: "2–8 SPIELER",
+  players2: "2 SPIELER",
+  alreadyHaveRoom: "Du hast schon einen Raum?",
+  enterRoomCode: "Gib den Raumcode deines Freundes ein und spiel mit.",
+  joinRoom: "Raum beitreten",
+  footer: "FÜR FREUNDE GEMACHT, EGAL WO SIE SIND",
+  backToGames: "← Zurück zu den Spielen",
+  nameHeading: "Wie sollen wir dich nennen?",
+  namePrompt: "Wähle einen Namen, den deine Freunde kennen.",
+  playerName: "SPIELERNAME",
+  cancel: "Abbrechen",
+  continue: "Weiter",
+  taglineJoin: "RAUMCODE",
+  copy: "Kopieren",
+  startingGame: "Du startest:",
+  joiningRoom: "Beitritt zu Raum",
+  gameNight: "Der Spieleabend beginnt hier.",
+  letGamesBegin: "Das Spiel beginnt!",
+  gameOver: "Spiel vorbei!",
+  shareCode: "Teile den Raumcode. Sobald alle da sind, kann es losgehen.",
+  readyText: "Alle bereit. Los geht's!",
+  waitingFriend: "Warte auf einen Freund …",
+  hostStarts: "Der Gastgeber startet das Spiel, sobald alle bereit sind.",
+  players: "Spieler",
+  host: "HOST",
+  you: "du",
+  startGame: "Spiel starten",
+  waitingRoom: "Warteraum",
+  inviteInstructions: "Schick den Raumcode an einen Freund. Sobald mindestens zwei Spieler da sind, kann der Gastgeber starten.",
+  needPlayer: "Zum Start wird noch ein Spieler benötigt",
+  readyToPlay: "Bereit zum Spielen!",
+  firstToAnswer: "WER ZUERST RICHTIG ANTWORTET, BEKOMMT DEN PUNKT",
+  firstToFive: "Wer zuerst fünf Punkte hat, gewinnt.",
+  quizDesc: "Wer am schnellsten richtig antwortet, gewinnt!",
+  quizWinDesc: "Tretet im Schnellquiz gegeneinander an und sammelt Punkte in fünf Runden.",
+  pongDesc: "Wer zuerst fünf Punkte hat, gewinnt. Bewege deinen Schläger mit W/S oder ↑/↓.",
+  ticDesc: "Setzt abwechselnd euer Zeichen. Drei in einer Reihe gewinnen.",
+  connectDesc: "Wer zuerst vier Steine in eine Reihe bringt, gewinnt.",
+  scrambleDesc: "Entwirre fünf Wörter. Die schnellste richtige Antwort bringt den Punkt!",
+  memoryDesc: "Finde gleiche Kartenpaare. Wer die meisten Paare findet, gewinnt.",
+  hangmanDesc: "Erratet gemeinsam das Wort, bevor euch die Versuche ausgehen.",
+  rpsDesc: "Wählt gleichzeitig und sammelt Punkte in fünf Runden.",
+  higherDesc: "Tippt abwechselnd, ob die nächste Zahl höher oder niedriger ist.",
+  battleshipDesc: "Sucht abwechselnd das Spielfeld ab. Wer alle vier Schiffsfelder trifft, gewinnt.",
+  reactionDesc: "Warte auf das Signal und tippe schnell. Wer reagiert am schnellsten?",
+  falseStarts: "Fehlstarts",
+  answerPlaceholder: "Antwort eingeben …",
+  send: "Senden",
+  wordPlaceholder: "Wort eingeben …",
+  solve: "Lösen",
+  unscramble: "ENTWIRRE DAS WORT",
+  word: "WORT",
+  of: "VON",
+  scores: "PUNKTE",
+  yourTurn: "Du bist dran",
+  waitingForPlayers: "Warte, bis alle gewählt haben …",
+  choosePrompt: "Wähle eins:",
+  rock: "Stein",
+  paper: "Papier",
+  scissors: "Schere",
+  waitingGo: "Warte auf das grüne Signal …",
+  go: "LOS!",
+  tapNow: "Jetzt tippen!",
+  fireInstructions: "Wähle ein Feld auf dem gegnerischen Spielfeld.",
+  yourFleet: "Deine Flotte",
+  opponentGrid: "Gegnerisches Spielfeld",
+  turn: "Am Zug",
+  noMatch: "Kein Paar. Der nächste Spieler ist dran.",
+  matchedPair: "Paar gefunden! Du bist nochmal dran.",
+  matchCards: "Finde alle Paare!",
+  guessLetter: "Rate einen Buchstaben",
+  guessesLeft: "Fehlversuche",
+  higher: "Höher",
+  lower: "Niedriger",
+  nextNumber: "Ist die nächste Zahl höher oder niedriger?",
+  round: "RUNDE",
+  ofFive: "VON 5",
+  numberRound: "Richtige Tipps",
+  hit: "Treffer",
+  miss: "Daneben",
+  alreadyChosen: "Auswahl gespeichert!",
+  incorrect: "Leider falsch. Versuch es nochmal!",
+  pairFound: "hat ein Paar gefunden!",
+  solved: "Richtig geraten! Gute Teamarbeit.",
+  roundComplete: "Runde beendet!",
+  draw: "Unentschieden!",
+  hitMessage: "hat einen Treffer gelandet!",
+  missed: "hat danebengeschossen.",
+  fleetWins: "hat die Flotte versenkt und gewinnt!",
+  guessedRight: "hat richtig geraten!",
+  notQuite: "Leider falsch! Die Zahl war",
+  winsQuiz: "gewinnt das Quiz!",
+  winsScramble: "gewinnt das Worträtsel!",
+  wordWas: "Das Wort war",
+  winSuffix: "gewinnt!",
+  falseStart: "ist zu früh gestartet!",
+  reacted: "hat am schnellsten reagiert!",
+  words: {
+    quiz: ["Schnellquiz", "Tretet im Schnellquiz gegeneinander an und sammelt Punkte in fünf Runden.", "Schnellquiz spielen"],
+    pong: ["Paddle-Duell", "Kleines Spielfeld, schneller Ball: Wer hat die besseren Reflexe?", "Paddle-Duell spielen"],
+    "tic-tac-toe": ["Tic-Tac-Toe", "Der Klassiker: Drei Zeichen in einer Reihe bringen den Sieg.", "Tic-Tac-Toe spielen"],
+    "connect-four": ["Vier gewinnt", "Bringe vier Steine in eine Reihe, bevor es dein Gegner tut.", "Vier gewinnt spielen"],
+    "word-scramble": ["Buchstabensalat", "Entwirre fünf Wörter. Die schnellste richtige Antwort bringt den Punkt!", "Buchstabensalat spielen"],
+    "memory-match": ["Pärchen finden", "Finde gleiche Kartenpaare. Wer die meisten findet, gewinnt.", "Pärchen finden spielen"],
+    hangman: ["Team-Worträtsel", "Erratet gemeinsam das Wort, bevor euch die Versuche ausgehen.", "Worträtsel spielen"],
+    "rock-paper-scissors": ["Stein, Papier, Schere", "Wählt gleichzeitig und sammelt Punkte in fünf Runden.", "Stein, Papier, Schere spielen"],
+    "higher-lower": ["Höher oder niedriger", "Tippt abwechselnd, ob die nächste Zahl höher oder niedriger ist.", "Höher oder niedriger spielen"],
+    battleship: ["Schiffe versenken", "Wer alle vier Schiffsfelder trifft, gewinnt.", "Schiffe versenken spielen"],
+    "reaction-race": ["Reaktionsrennen", "Warte auf das Signal und tippe schnell. Wer reagiert am schnellsten?", "Reaktionsrennen spielen"],
+  },
+  quizQuestions: [
+    "Was ist der größte Planet unseres Sonnensystems?",
+    "Wie viele Seiten hat ein Sechseck?",
+    "Was ist die Hauptstadt von Japan?",
+    "Welcher Ozean ist der größte?",
+    "Was ist 9 × 7?",
+  ],
+};
+
+translations.de.noPair = "Kein Paar. Der nächste Spieler ist dran.";
+translations.de.words["reaction-race"] = [
+  "Reaktionsrennen",
+  "Warte auf das Signal und tippe schnell. Wer reagiert am schnellsten?",
+  "Reaktionsrennen spielen",
+];
+
+const descriptionKeys = {
+  quiz: "quizDesc",
+  pong: "pongDesc",
+  "tic-tac-toe": "ticDesc",
+  "connect-four": "connectDesc",
+  "word-scramble": "scrambleDesc",
+  "memory-match": "memoryDesc",
+  hangman: "hangmanDesc",
+  "rock-paper-scissors": "rpsDesc",
+  "higher-lower": "higherDesc",
+  battleship: "battleshipDesc",
+  "reaction-race": "reactionDesc",
+};
+
+let language = ["en", "de", "zh", "es"].includes(localStorage.getItem("play-together-language"))
+  ? localStorage.getItem("play-together-language")
+  : "en";
+function t(key) {
+  return translations[language]?.[key] ?? translations.en[key] ?? key;
+}
+
+function localizeMessage(room, message) {
+  if (!message || language === "en") return message;
+  for (const player of room.players) {
+    if (message === `${player.name} jumped the start!`) return `${player.name} ${t("falseStart")}`;
+    if (message === `${player.name} reacted first!`) return `${player.name} ${t("reacted")}`;
+  }
+  if (message === "Not quite. Try again!") return t("incorrect");
+  if (message === "No match. Next player's turn.") return t("noPair");
+  if (message === "Round complete!") return t("roundComplete");
+  if (message === "It's a draw!") return t("draw");
+  if (message === "It's a tie!") return t("draw");
+  if (message === "You solved it! Nice teamwork.") return t("solved");
+  if (message === "Not that word. Give it another go!") return t("incorrect");
+  if (message.startsWith("The word was ")) return `${t("wordWas")} ${room.gameState.word}.`;
+  if (message.startsWith("Not quite! The number was ")) {
+    return `${t("notQuite")} ${room.gameState.target}.`;
+  }
+  if (room.game === "memory-match") {
+    const player = room.players.find((item) => message === `${item.name} found a pair!`);
+    if (player) return `${player.name} ${t("pairFound")}`;
+  }
+  if (room.game === "higher-lower") {
+    const player = room.players.find((item) => message === `${item.name} guessed right!`);
+    if (player) return `${player.name} ${t("guessedRight")}`;
+    const winner = room.players.find((item) => message.startsWith(`${item.name} wins with `));
+    if (winner) return `${winner.name} ${t("winSuffix")}`;
+  }
+  if (room.game === "battleship") {
+    for (const player of room.players) {
+      if (message === `${player.name} scored a hit!`) return `${player.name} ${t("hitMessage")}`;
+      if (message === `${player.name} missed.`) return `${player.name} ${t("missed")}`;
+      if (message === `${player.name} sank the fleet and wins!`) return `${player.name} ${t("fleetWins")}`;
+    }
+  }
+  for (const player of room.players) {
+    if (message === `${player.name} got it!`) return `${player.name} ${t("guessedRight")}`;
+    if (message === `${player.name} unscrambled it!`) return `${player.name} ${t("guessedRight")}`;
+    if (message === `${player.name} wins the quiz!`) return `${player.name} ${t("winsQuiz")}`;
+    if (message === `${player.name} wins the word scramble!`) return `${player.name} ${t("winsScramble")}`;
+    if (message === `${player.name} wins!`) return `${player.name} ${t("winSuffix")}`;
+  }
+  return message;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = language === "zh" ? "zh-CN" : language;
+  document.title = t("pageTitle");
+  document.querySelector("#language-select").setAttribute("aria-label", t("selectLanguage"));
+  document.querySelector("#join-code").placeholder = t("roomCodePlaceholder");
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach((element) => {
+    element.setAttribute("aria-label", t(element.dataset.i18nAria));
+  });
+  document.querySelectorAll(".game-card").forEach((card) => {
+    const game = card.querySelector(".choose-button")?.dataset.game;
+    const words = translations[language].words[game];
+    if (!words) return;
+    card.querySelector("h2").textContent = words[0];
+    card.querySelector("p").textContent = words[1];
+    card.querySelector(".choose-button").firstChild.textContent = `${words[2]} `;
+  });
+  if (currentRoom) {
+    lastRendered = "";
+    refreshRoom();
+  }
+}
+
+document.querySelector("#language-select").value = language;
+document.querySelector("#language-select").addEventListener("change", (event) => {
+  language = event.currentTarget.value;
+  localStorage.setItem("play-together-language", language);
+  applyLanguage();
+});
+
+const homeScreen = document.querySelector("#home-screen");
+const roomScreen = document.querySelector("#room-screen");
+const roomContent = document.querySelector("#room-content");
+const nameDialog = document.querySelector("#name-dialog");
+const nameInput = document.querySelector("#player-name");
+const toast = document.querySelector("#toast");
+let currentRoom = null;
+let pollTimer = null;
+let toastTimer = null;
+let lastRendered = "";
+let pendingEntry = null;
+let currentGame = "";
+let currentPhase = "";
+let lastPaddleDirection = 0;
+const pressedKeys = new Set();
+applyLanguage();
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.add("hidden"), 3000);
+}
+
+async function request(url, options = {}) {
+  const { playerToken, ...fetchOptions } = options;
+  const response = await fetch(url, {
+    ...fetchOptions,
+    headers: {
+      "Content-Type": "application/json",
+      ...fetchOptions.headers,
+      ...(playerToken ? { Authorization: `Bearer ${playerToken}` } : {}),
+    },
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Something went wrong.");
+  return result;
+}
+
+function enterRoom(room) {
+  currentRoom = { code: room.code, playerToken: room.playerToken };
+  currentGame = room.game;
+  currentPhase = room.phase;
+  pressedKeys.clear();
+  lastPaddleDirection = 0;
+  sessionStorage.setItem("play-together-room", JSON.stringify(currentRoom));
+  lastRendered = "";
+  homeScreen.classList.add("hidden");
+  roomScreen.classList.remove("hidden");
+  renderRoom(room);
+  clearInterval(pollTimer);
+  pollTimer = setInterval(refreshRoom, 600);
+}
+
+async function refreshRoom() {
+  if (!currentRoom) return;
+  try {
+    const params = new URLSearchParams({ code: currentRoom.code });
+    const room = await request(`/api/state?${params}`, { playerToken: currentRoom.playerToken });
+    renderRoom(room);
+  } catch (error) {
+    showToast(error.message);
+    leaveRoom();
+  }
+}
+
+async function sendAction(action, extra = {}) {
+  if (!currentRoom) return;
+  try {
+    const room = await request("/api/action", {
+      method: "POST",
+      body: JSON.stringify({ code: currentRoom.code, action, ...extra }),
+      playerToken: currentRoom.playerToken,
+    });
+    renderRoom(room);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+function renderRoom(room) {
+  currentGame = room.game;
+  currentPhase = room.phase;
+  const signature = JSON.stringify(room);
+  if (signature === lastRendered) return;
+  lastRendered = signature;
+  const you = room.players[room.you];
+  if (!you) return;
+  const gameName = translations[language].words[room.game][0];
+
+  roomContent.innerHTML = `
+    <div class="room-heading">
+      <div class="eyebrow"><span>✦</span> ${escapeHtml(gameName)}</div>
+      <h1>${room.phase === "lobby" ? t("gameNight") : room.phase === "finished" ? t("gameOver") : t("letGamesBegin")}</h1>
+      <p>${room.phase === "lobby" ? t("shareCode") : t(descriptionKeys[room.game])}</p>
+      <div class="room-code"><span>${t("taglineJoin")}</span><strong>${room.code}</strong><button id="copy-code">${t("copy")}</button></div>
+    </div>
+    <div class="room-layout">
+      <section class="play-card">${renderGame(room, you)}</section>
+      <aside class="players-card">
+        <h3>${t("players")} <span>(${room.players.length})</span></h3>
+        ${room.players.map((player, index) => `
+          <div class="player-row">
+            <span class="avatar">${escapeHtml(player.name.slice(0, 1).toUpperCase())}</span>
+            <span>${escapeHtml(player.name)}${index === room.you ? ` (${t("you")})` : ""}</span>
+            <span class="player-tag">${player.isHost ? t("host") : ["tic-tac-toe", "connect-four"].includes(room.game) ? player.mark : ""}</span>
+          </div>`).join("")}
+        ${room.phase === "lobby" ? `<p class="room-note">${room.players.length < 2 ? t("waitingFriend") : t("readyText")}</p>` : ""}
+        ${room.phase === "lobby" && you.isHost ? `<button id="start-game" class="button button-primary start-button" ${room.players.length < 2 ? "disabled" : ""}>${t("startGame")} <span>→</span></button>` : ""}
+        ${room.phase === "lobby" && !you.isHost ? `<p class="room-note">${t("hostStarts")}</p>` : ""}
+      </aside>
+    </div>`;
+
+  roomContent.querySelector("#copy-code")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(room.code);
+      showToast(`${t("copy")}!`);
+    } catch {
+      showToast(`Share this code: ${room.code}`);
+    }
+  });
+  roomContent.querySelector("#start-game")?.addEventListener("click", () => sendAction("start"));
+  roomContent.querySelector("#answer-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = event.currentTarget.elements.answer;
+    if (input.value.trim()) sendAction("guess", { answer: input.value });
+    input.value = "";
+    input.focus();
+  });
+  roomContent.querySelector("#scramble-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = event.currentTarget.elements.answer;
+    if (input.value.trim()) sendAction("solve", { answer: input.value });
+    input.value = "";
+    input.focus();
+  });
+  roomContent.querySelectorAll(".tic-cell").forEach((cell) => {
+    cell.addEventListener("click", () => sendAction("move", { index: Number(cell.dataset.index) }));
+  });
+  roomContent.querySelectorAll(".memory-cell").forEach((cell) => {
+    cell.addEventListener("click", () => sendAction("flip", { index: Number(cell.dataset.index) }));
+  });
+  roomContent.querySelectorAll(".letter-button").forEach((button) => {
+    button.addEventListener("click", () => sendAction("letter", { letter: button.dataset.letter }));
+  });
+  roomContent.querySelectorAll(".rps-button").forEach((button) => {
+    button.addEventListener("click", () => sendAction("choose", { choice: button.dataset.choice }));
+  });
+  roomContent.querySelectorAll("[data-guess]").forEach((button) => {
+    button.addEventListener("click", () => sendAction("higher-lower", { guess: button.dataset.guess }));
+  });
+  roomContent.querySelectorAll(".target-board .battle-cell").forEach((cell) => {
+    cell.addEventListener("click", () => sendAction("fire", { index: Number(cell.dataset.index) }));
+  });
+  roomContent.querySelectorAll(".connect-cell").forEach((cell) => {
+    cell.addEventListener("click", () => sendAction("drop", { column: Number(cell.dataset.column) }));
+  });
+  roomContent.querySelector(".reaction-button")?.addEventListener("click", () => sendAction("react"));
+  if (room.game === "pong" && room.phase === "playing") drawPong(room);
+}
+
+function renderGame(room, you) {
+  if (room.phase === "lobby") {
+    return `<h3>${t("waitingRoom")}</h3><p class="room-note">${t("inviteInstructions")}</p><div class="game-status">${room.players.length < 2 ? t("needPlayer") : t("readyToPlay")}</div>`;
+  }
+  const state = room.gameState;
+  const message = localizeMessage(room, state.message);
+  const scores = room.players.map((player, index) =>
+    `<span class="score-chip">${escapeHtml(player.name)} · ${state.scores?.[index] || 0}</span>`).join("");
+  if (room.game === "reaction-race") {
+    const canReact = room.phase === "playing" && !state.playerFalseStarted;
+    return `<div class="game-status">${escapeHtml(message || (state.ready ? t("go") : t("waitingGo")))}</div>
+      <p class="game-help">${state.playerFalseStarted ? t("falseStart") : t("reactionDesc")}</p>
+      <button class="button ${state.ready ? "button-primary" : "button-light"} reaction-button" ${!canReact ? "disabled" : ""}>
+        ${state.ready ? t("tapNow") : t("waitingGo")}
+      </button>
+      ${state.falseStarts ? `<p class="game-help">${state.falseStarts} ${t("falseStarts")}</p>` : ""}`;
+  }
+  if (room.game === "quiz") {
+    if (room.phase === "finished") {
+      return `<div class="game-status">${escapeHtml(message)}</div><div class="quiz-scores">${scores}</div>`;
+    }
+    return `<div class="game-status">${escapeHtml(message || t("firstToAnswer"))}</div>
+      <div class="quiz-question">${escapeHtml(translations[language].quizQuestions[state.questionNumber] || state.question || "Get ready…")}</div>
+      ${state.answered ? "" : `<form id="answer-form" class="answer-form"><label class="sr-only" for="answer">${t("answerPlaceholder")}</label><input id="answer" name="answer" class="name-input" placeholder="${t("answerPlaceholder")}" autocomplete="off" required><button class="button button-primary">${t("send")} <span>→</span></button></form>`}
+      <div class="quiz-scores">${scores}</div>`;
+  }
+  if (room.game === "word-scramble") {
+    if (room.phase === "finished") {
+      return `<div class="game-status">${escapeHtml(message)}</div><div class="quiz-scores">${scores}</div>`;
+    }
+    return `<div class="game-status">${escapeHtml(message || t("unscramble"))}</div>
+      <p class="round-label">${t("word")} ${state.round || 1} ${t("of")} 5</p>
+      <div class="scrambled-word">${escapeHtml(state.scramble || "GET READY")}</div>
+      ${state.answered ? "" : `<form id="scramble-form" class="answer-form"><label class="sr-only" for="answer">${t("wordPlaceholder")}</label><input id="answer" name="answer" class="name-input" placeholder="${t("wordPlaceholder")}" autocomplete="off" required><button class="button button-primary">${t("solve")} <span>→</span></button></form>`}
+      <div class="quiz-scores">${scores}</div>`;
+  }
+  if (room.game === "pong") {
+    return `<div class="game-status">${escapeHtml(message || `${state.scores[0]} — ${state.scores[1]}`)}</div>
+      <div class="canvas-wrap"><canvas id="pong-canvas" width="600" height="300" aria-label="Paddle Clash game field"></canvas></div>
+      <p class="pong-controls">${room.phase === "finished" ? t("gameOver") : `W / S or ↑ / ↓ · ${t("firstToFive")}`}</p>`;
+  }
+  if (room.game === "connect-four") {
+    const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
+    const turnText = state.winner ? message : `${t("turn")}: ${room.players[state.turn]?.name || "Player"}`;
+    return `<div class="game-status">${escapeHtml(turnText)}</div>
+      <div class="connect-board">${state.board.map((mark, index) => {
+        const column = index % 7;
+        return `<button class="connect-cell ${mark ? `disc-${mark.toLowerCase()}` : ""}" data-column="${column}" aria-label="Column ${column + 1}${mark ? `, row ${Math.floor(index / 7) + 1}: ${mark === "R" ? "red" : "yellow"}` : ""}" ${!canPlay || mark ? "disabled" : ""}></button>`;
+      }).join("")}</div>`;
+  }
+  if (room.game === "memory-match") {
+    const canFlip = room.phase === "playing" && room.you === state.turn && state.revealed.length < 2;
+    return `<div class="game-status">${escapeHtml(message || t("matchCards"))}</div>
+      <div class="quiz-scores">${room.players.map((player) =>
+        `<span class="score-chip">${escapeHtml(player.name)} · ${state.scores[player.side] || 0}</span>`).join("")}</div>
+      <div class="memory-board">${state.cards.map((symbol, index) =>
+        `<button class="memory-cell ${state.matched[index] ? "matched" : ""}" data-index="${index}" aria-label="Card ${index + 1}" ${!canFlip || state.matched[index] || symbol ? "disabled" : ""}>${escapeHtml(symbol || "?")}</button>`).join("")}</div>`;
+  }
+  if (room.game === "hangman") {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    return `<div class="game-status">${escapeHtml(message || t("hangmanDesc"))}</div>
+      <div class="hangman-word">${escapeHtml(state.mask)}</div>
+      <p class="game-help">${t("guessesLeft")}: ${Math.max(0, 6 - state.wrong)}</p>
+      <div class="letter-board">${letters.map((letter) =>
+        `<button class="letter-button" data-letter="${letter}" ${state.guesses.includes(letter) || room.phase !== "playing" ? "disabled" : ""}>${letter}</button>`).join("")}</div>
+      ${room.phase === "finished" ? `<p class="game-status">${escapeHtml(state.word || "")}</p>` : ""}`;
+  }
+  if (room.game === "rock-paper-scissors") {
+    const options = [["rock", "rock"], ["paper", "paper"], ["scissors", "scissors"]];
+    return `<div class="game-status">${escapeHtml(message || `${t("round")} ${state.round} ${t("ofFive")}`)}</div>
+      ${state.answered ? `<div class="rps-reveal">${room.players.map((player) =>
+        `<span class="score-chip">${escapeHtml(player.name)}: ${t(state.choices[player.side])}</span>`).join("")}</div>` :
+        state.playerHasChosen ? `<p class="game-help">${t("alreadyChosen")} ${state.choicesMade}/${room.players.length} · ${t("waitingForPlayers")}</p>` :
+          `<p class="game-help">${t("choosePrompt")}</p><div class="rps-options">${options.map(([choice, key]) =>
+            `<button class="button button-light rps-button" data-choice="${choice}">${t(key)}</button>`).join("")}</div>`}
+      <div class="quiz-scores">${scores}</div>`;
+  }
+  if (room.game === "higher-lower") {
+    const yourTurn = room.phase === "playing" && room.you === state.turn;
+    return `<div class="game-status">${escapeHtml(message || `${t("round")}: ${state.round}/10`)}</div>
+      <div class="higher-card"><p>${t("nextNumber")}</p><strong>${state.current}</strong>
+        ${yourTurn ? `<div class="higher-options"><button class="button button-primary" data-guess="higher">${t("higher")}</button><button class="button button-dark" data-guess="lower">${t("lower")}</button></div>` :
+          `<p class="game-help">${t("turn")}: ${escapeHtml(room.players[state.turn]?.name || "")}</p>`}</div>
+      <div class="quiz-scores">${room.players.map((player) =>
+        `<span class="score-chip">${escapeHtml(player.name)} · ${state.scores[player.side] || 0}</span>`).join("")}</div>`;
+  }
+  if (room.game === "battleship") {
+    const yourTurn = room.phase === "playing" && room.you === state.turn;
+    return `<div class="game-status">${escapeHtml(message || `${t("turn")}: ${room.players[state.turn]?.name || ""}`)}</div>
+      <p class="game-help">${t("fireInstructions")}</p>
+      <h3 class="board-title">${t("opponentGrid")}</h3>
+      <div class="battle-board target-board">${state.targetBoard.map((mark, index) =>
+        `<button class="battle-cell ${mark ? `battle-${mark}` : ""}" data-index="${index}" aria-label="${t("opponentGrid")} ${index + 1}" ${!yourTurn || mark ? "disabled" : ""}>${mark === "hit" ? "×" : mark === "miss" ? "·" : ""}</button>`).join("")}</div>
+      <h3 class="board-title">${t("yourFleet")}</h3>
+      <div class="battle-board own-board">${state.ownBoard.map((mark, index) =>
+        `<div class="battle-cell ${mark ? `battle-${mark}` : ""}" aria-label="${t("yourFleet")} ${index + 1}">${mark === "hit" ? "×" : mark === "miss" ? "·" : ""}</div>`).join("")}</div>`;
+  }
+  const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
+  const turnText = state.winner ? localizeMessage(room, state.message) :
+    `${t("turn")}: ${room.players[state.turn]?.name || "Player"} (${state.turn === 0 ? "X" : "O"})`;
+  return `<div class="game-status">${escapeHtml(turnText)}</div>
+    <div class="tic-board">${state.board.map((mark, index) =>
+      `<button class="tic-cell" data-index="${index}" aria-label="Cell ${index + 1}${mark ? `: ${mark}` : ""}" ${!canPlay || mark ? "disabled" : ""}>${mark}</button>`).join("")}</div>`;
+}
+
+function drawPong(room) {
+  const canvas = roomContent.querySelector("#pong-canvas");
+  if (!canvas) return;
+  const context = canvas.getContext("2d");
+  const { ball, paddles, scores } = room.gameState;
+  const width = canvas.width;
+  const height = canvas.height;
+  context.fillStyle = "#17242c";
+  context.fillRect(0, 0, width, height);
+  context.setLineDash([6, 9]);
+  context.strokeStyle = "#ffffff35";
+  context.beginPath();
+  context.moveTo(width / 2, 0);
+  context.lineTo(width / 2, height);
+  context.stroke();
+  context.setLineDash([]);
+  context.fillStyle = "#f4f3f8";
+  context.fillRect(width * 0.06, height * paddles[0] - 25, 9, 50);
+  context.fillStyle = "#b5f2d3";
+  context.fillRect(width * 0.94 - 9, height * paddles[1] - 25, 9, 50);
+  context.beginPath();
+  context.arc(width * ball.x, height * ball.y, 7, 0, Math.PI * 2);
+  context.fillStyle = "#a58bff";
+  context.fill();
+  context.font = "600 21px 'Space Grotesk', sans-serif";
+  context.fillStyle = "#ffffff80";
+  context.textAlign = "center";
+  context.fillText(`${scores[0]}     ${scores[1]}`, width / 2, 28);
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[character]);
+}
+
+function leaveRoom() {
+  if (currentRoom && currentGame === "pong" && currentPhase === "playing" && lastPaddleDirection !== 0) {
+    sendAction("paddle", { direction: 0 });
+  }
+  clearInterval(pollTimer);
+  currentRoom = null;
+  currentGame = "";
+  currentPhase = "";
+  lastPaddleDirection = 0;
+  pressedKeys.clear();
+  sessionStorage.removeItem("play-together-room");
+  roomScreen.classList.add("hidden");
+  homeScreen.classList.remove("hidden");
+}
+
+document.querySelectorAll(".choose-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    pendingEntry = { game: button.dataset.game };
+    document.querySelector("#name-prompt").textContent = `${t("startingGame")} ${translations[language].words[pendingEntry.game][0]}.`;
+    nameInput.value = "";
+    nameDialog.showModal();
+    nameInput.focus();
+  });
+});
+
+document.querySelector("#join-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  pendingEntry = { code: document.querySelector("#join-code").value.trim() };
+  document.querySelector("#name-prompt").textContent = `${t("joiningRoom")} ${pendingEntry.code.toUpperCase()}.`;
+  nameInput.value = "";
+  nameDialog.showModal();
+  nameInput.focus();
+});
+
+document.querySelector("#name-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const name = nameInput.value.trim();
+  if (!name || !pendingEntry) return;
+  const entry = pendingEntry;
+  pendingEntry = null;
+  nameDialog.close();
+  try {
+    if (entry.code) {
+      enterRoom(await request("/api/join", {
+        method: "POST",
+        body: JSON.stringify({ code: entry.code, name }),
+      }));
+    } else {
+      enterRoom(await request("/api/rooms", {
+        method: "POST",
+        body: JSON.stringify({ name, game: entry.game }),
+      }));
+    }
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+document.querySelector("#cancel-name").addEventListener("click", () => {
+  pendingEntry = null;
+  nameDialog.close();
+});
+
+document.querySelector("#leave-button").addEventListener("click", leaveRoom);
+
+function updatePaddle(event, direction) {
+  const key = event.key.toLowerCase();
+  if (!["w", "s", "arrowup", "arrowdown"].includes(key)) return;
+  event.preventDefault();
+  if (direction === 0) pressedKeys.delete(key);
+  else pressedKeys.add(key);
+  const value = pressedKeys.has("w") || pressedKeys.has("arrowup") ? -1 :
+    pressedKeys.has("s") || pressedKeys.has("arrowdown") ? 1 : 0;
+  if (currentRoom && currentGame === "pong" && currentPhase === "playing" &&
+    value !== lastPaddleDirection) {
+    lastPaddleDirection = value;
+    sendAction("paddle", { direction: value });
+  }
+}
+window.addEventListener("keydown", (event) => updatePaddle(event, 1));
+window.addEventListener("keyup", (event) => updatePaddle(event, 0));
+window.addEventListener("blur", () => {
+  pressedKeys.clear();
+  if (currentRoom && currentGame === "pong" && currentPhase === "playing" &&
+    lastPaddleDirection !== 0) {
+    lastPaddleDirection = 0;
+    sendAction("paddle", { direction: 0 });
+  }
+});
+
+try {
+  const savedRoom = JSON.parse(sessionStorage.getItem("play-together-room") || "null");
+  if (savedRoom?.code && /^[A-F0-9]{16}$/i.test(savedRoom.code) &&
+    typeof savedRoom?.playerToken === "string" && /^[a-f0-9]{64}$/i.test(savedRoom.playerToken)) {
+    currentRoom = savedRoom;
+    refreshRoom().then(() => {
+      if (currentRoom) {
+        homeScreen.classList.add("hidden");
+        roomScreen.classList.remove("hidden");
+        pollTimer = setInterval(refreshRoom, 600);
+      }
+    });
+  } else if (savedRoom) {
+    sessionStorage.removeItem("play-together-room");
+  }
+} catch {
+  sessionStorage.removeItem("play-together-room");
+}

@@ -1,0 +1,12 @@
+{
+  "name": "play-together",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lightweight online multiplayer game hub",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
