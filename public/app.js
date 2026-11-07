@@ -12,7 +12,7 @@ const translations = {
     namePrompt: "Choose a name your friends will recognize.", playerName: "PLAYER NAME",
     cancel: "Cancel", continue: "Continue", taglineJoin: "ROOM CODE", copy: "Copy",
     startingGame: "You're starting a game of", joiningRoom: "Joining room",
-    gameNight: "Game night starts here.", letGamesBegin: "Let the games begin.", gameOver: "Game over!",
+    gameNight: "Game night starts here.", letGamesBegin: "Let the games begin.", gameOver: "Game over!", victory: "You won!",
     shareCode: "Share your room code, then kick things off when everyone's in.",
     readyText: "Ready when you are!", waitingFriend: "Waiting for a friend to join…",
     hostStarts: "The host will start the game when ready.", players: "Players",
@@ -33,6 +33,11 @@ const translations = {
     battleshipDesc: "Take turns searching the grid. Find and sink all four hidden ship cells to win.",
     reactionDesc: "Wait for the signal and tap quickly. Who reacts first?",
     falseStarts: "false starts",
+    customCode: "CUSTOM ROOM CODE (OPTIONAL)", customCodeHelp: "4–16 letters or numbers. Easy codes can be guessed; leave blank for a random code.",
+    copyLink: "Copy invite link", linkCopied: "Invite link copied!", linkCopyFailed: "Copy the selected invitation link.",
+    inviteLink: "Invitation link", invalidInvite: "This invitation link has an invalid room code.",
+    codeTaken: "That room code is already in use.", invalidCode: "Room code must contain 4 to 16 letters or numbers.",
+    winningCell: "winning cell",
     falseStart: "False start!",
     answerPlaceholder: "Type your answer…", send: "Send", wordPlaceholder: "Type the word…", solve: "Solve",
     unscramble: "UNSCRAMBLE THE WORD", word: "WORD", of: "OF", scores: "SCORES",
@@ -86,7 +91,7 @@ const translations = {
     namePrompt: "起个朋友们能认出的名字。", playerName: "玩家名称",
     cancel: "取消", continue: "继续", taglineJoin: "房间码", copy: "复制",
     startingGame: "你将开始游戏：", joiningRoom: "正在加入房间",
-    gameNight: "游戏之夜，从这里开始。", letGamesBegin: "游戏开始！", gameOver: "游戏结束！",
+    gameNight: "游戏之夜，从这里开始。", letGamesBegin: "游戏开始！", gameOver: "游戏结束！", victory: "你赢了！",
     shareCode: "把房间码发给朋友，人齐了就开始。", readyText: "准备好了就开始！",
     waitingFriend: "正在等朋友加入…", hostStarts: "房主准备好后就会开始游戏。",
     players: "玩家", host: "房主", you: "你", startGame: "开始游戏",
@@ -143,6 +148,10 @@ const translations = {
     winsQuiz: "赢得了问答比赛！", winsScramble: "赢得了拼词比赛！",
     wordWas: "单词是", winSuffix: "获胜！",
     falseStart: "抢跑了！", reacted: "反应最快！", falseStarts: "次抢跑",
+    customCode: "自定义房间码（可选）", customCodeHelp: "4–16 个字母或数字。简单的房间码容易被猜到；留空可使用随机码。",
+    copyLink: "复制邀请链接", linkCopied: "邀请链接已复制！", linkCopyFailed: "请复制选中的邀请链接。",
+    inviteLink: "邀请链接", invalidInvite: "邀请链接中的房间码无效。",
+    codeTaken: "该房间码已被使用。", invalidCode: "房间码必须为 4–16 个字母或数字。", winningCell: "获胜格子",
   },
   es: {
     selectLanguage: "Elegir idioma", pageTitle: "Juega en compañía — Noche de juegos en línea", roomCodePlaceholder: "CÓDIGO",
@@ -157,7 +166,7 @@ const translations = {
     namePrompt: "Elige un nombre que tus amigos reconozcan.", playerName: "NOMBRE",
     cancel: "Cancelar", continue: "Continuar", taglineJoin: "CÓDIGO", copy: "Copiar",
     startingGame: "Vas a empezar una partida de", joiningRoom: "Uniéndote a la sala",
-    gameNight: "La noche de juegos empieza aquí.", letGamesBegin: "¡Que empiece el juego!", gameOver: "¡Fin del juego!",
+    gameNight: "La noche de juegos empieza aquí.", letGamesBegin: "¡Que empiece el juego!", gameOver: "¡Fin del juego!", victory: "¡Has ganado!",
     shareCode: "Comparte el código y empieza cuando todos estén aquí.", readyText: "¡Listos para jugar!",
     waitingFriend: "Esperando a un amigo…", hostStarts: "El anfitrión empezará cuando esté listo.",
     players: "Jugadores", host: "ANFITRIÓN", you: "tú", startGame: "Empezar",
@@ -214,6 +223,10 @@ const translations = {
     winsQuiz: "¡gana el concurso!", winsScramble: "¡gana las palabras revueltas!",
     wordWas: "La palabra era", winSuffix: "¡gana!",
     falseStart: "se adelantó a la señal.", reacted: "reaccionó primero.", falseStarts: "salidas falsas",
+    customCode: "CÓDIGO PERSONALIZADO (OPCIONAL)", customCodeHelp: "Entre 4 y 16 letras o números. Un código fácil se puede adivinar; déjalo vacío para usar uno aleatorio.",
+    copyLink: "Copiar enlace de invitación", linkCopied: "¡Enlace copiado!", linkCopyFailed: "Copia el enlace seleccionado.",
+    inviteLink: "Enlace de invitación", invalidInvite: "El código del enlace de invitación no es válido.",
+    codeTaken: "Ese código ya está en uso.", invalidCode: "El código debe tener entre 4 y 16 letras o números.", winningCell: "casilla ganadora",
   },
 };
 
@@ -251,6 +264,17 @@ translations.de = {
   gameNight: "Der Spieleabend beginnt hier.",
   letGamesBegin: "Das Spiel beginnt!",
   gameOver: "Spiel vorbei!",
+  victory: "Du hast gewonnen!",
+  customCode: "EIGENER RAUMCODE (OPTIONAL)",
+  customCodeHelp: "4–16 Buchstaben oder Zahlen. Einfache Codes sind leicht zu erraten; leer lassen für einen Zufallscode.",
+  copyLink: "Einladungslink kopieren",
+  linkCopied: "Einladungslink kopiert!",
+  linkCopyFailed: "Kopiere den markierten Einladungslink.",
+  inviteLink: "Einladungslink",
+  invalidInvite: "Der Raumcode im Einladungslink ist ungültig.",
+  codeTaken: "Dieser Raumcode wird bereits verwendet.",
+  invalidCode: "Der Raumcode muss aus 4 bis 16 Buchstaben oder Zahlen bestehen.",
+  winningCell: "Gewinnfeld",
   shareCode: "Teile den Raumcode. Sobald alle da sind, kann es losgehen.",
   readyText: "Alle bereit. Los geht's!",
   waitingFriend: "Warte auf einen Freund …",
@@ -460,6 +484,9 @@ const roomScreen = document.querySelector("#room-screen");
 const roomContent = document.querySelector("#room-content");
 const nameDialog = document.querySelector("#name-dialog");
 const nameInput = document.querySelector("#player-name");
+const customCodeInput = document.querySelector("#custom-code");
+const customCodeGroup = document.querySelector("#custom-code-group");
+const nameError = document.querySelector("#name-error");
 const toast = document.querySelector("#toast");
 let currentRoom = null;
 let pollTimer = null;
@@ -469,6 +496,8 @@ let pendingEntry = null;
 let currentGame = "";
 let currentPhase = "";
 let lastPaddleDirection = 0;
+let celebratedRoom = "";
+let fireworksTimer = null;
 const pressedKeys = new Set();
 applyLanguage();
 
@@ -535,6 +564,51 @@ async function sendAction(action, extra = {}) {
   }
 }
 
+function playerWon(room) {
+  if (room.phase !== "finished") return false;
+  const state = room.gameState;
+  if (room.game === "hangman") {
+    return typeof state.word === "string" && [...state.word].every((letter) => state.guesses.includes(letter));
+  }
+  if (room.game === "reaction-race" || room.game === "battleship") {
+    return state.winner === room.you;
+  }
+  if (room.game === "tic-tac-toe" || room.game === "connect-four") {
+    const marks = room.game === "tic-tac-toe" ? ["X", "O"] : ["R", "Y"];
+    return state.winner === marks[room.you];
+  }
+  if (room.game === "higher-lower" && state.scores.reduce((sum, score) => sum + score, 0) < 10) {
+    return false;
+  }
+  if (["quiz", "word-scramble", "pong", "memory-match", "rock-paper-scissors", "higher-lower"].includes(room.game)) {
+    const highScore = Math.max(...state.scores);
+    if (["memory-match", "rock-paper-scissors"].includes(room.game) &&
+      state.scores.filter((score) => score === highScore).length > 1) return false;
+    return state.scores.indexOf(highScore) === room.you;
+  }
+  return false;
+}
+
+function celebrateVictory() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const fireworks = document.createElement("div");
+  fireworks.className = "fireworks";
+  fireworks.setAttribute("aria-hidden", "true");
+  for (let burstIndex = 0; burstIndex < 3; burstIndex += 1) {
+    const burst = document.createElement("div");
+    burst.className = "firework-burst";
+    for (let sparkIndex = 0; sparkIndex < 8; sparkIndex += 1) {
+      burst.appendChild(document.createElement("span"));
+    }
+    fireworks.appendChild(burst);
+  }
+  document.body.appendChild(fireworks);
+  fireworksTimer = setTimeout(() => {
+    fireworks.remove();
+    fireworksTimer = null;
+  }, 3400);
+}
+
 function renderRoom(room) {
   currentGame = room.game;
   currentPhase = room.phase;
@@ -544,13 +618,22 @@ function renderRoom(room) {
   const you = room.players[room.you];
   if (!you) return;
   const gameName = translations[language].words[room.game][0];
+  const won = playerWon(room);
+  const celebrate = won || (room.game === "tic-tac-toe" && room.phase === "finished" &&
+    ["X", "O"].includes(room.gameState.winner));
+  if (celebrate && celebratedRoom !== room.code) {
+    celebratedRoom = room.code;
+    celebrateVictory();
+  }
 
   roomContent.innerHTML = `
     <div class="room-heading">
       <div class="eyebrow"><span>✦</span> ${escapeHtml(gameName)}</div>
       <h1>${room.phase === "lobby" ? t("gameNight") : room.phase === "finished" ? t("gameOver") : t("letGamesBegin")}</h1>
+      ${won ? `<div class="victory-badge"><span aria-hidden="true">✦</span> ${t("victory")} <span aria-hidden="true">✦</span></div>` : ""}
       <p>${room.phase === "lobby" ? t("shareCode") : t(descriptionKeys[room.game])}</p>
-      <div class="room-code"><span>${t("taglineJoin")}</span><strong>${room.code}</strong><button id="copy-code">${t("copy")}</button></div>
+      <div class="room-code"><span>${t("taglineJoin")}</span><strong>${escapeHtml(room.code)}</strong><button id="copy-code">${t("copy")}</button></div>
+      ${room.phase === "lobby" ? `<div class="invite-share"><label for="invite-link">${t("inviteLink")}</label><div><input id="invite-link" type="text" readonly><button id="copy-link" class="button button-primary">${t("copyLink")}</button></div></div>` : ""}
     </div>
     <div class="room-layout">
       <section class="play-card">${renderGame(room, you)}</section>
@@ -576,6 +659,22 @@ function renderRoom(room) {
       showToast(`Share this code: ${room.code}`);
     }
   });
+  const inviteInput = roomContent.querySelector("#invite-link");
+  if (inviteInput) {
+    const inviteUrl = new URL("/", window.location.origin);
+    inviteUrl.searchParams.set("room", room.code);
+    inviteInput.value = inviteUrl.href;
+    roomContent.querySelector("#copy-link").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(inviteInput.value);
+        showToast(t("linkCopied"));
+      } catch {
+        inviteInput.focus();
+        inviteInput.select();
+        showToast(t("linkCopyFailed"));
+      }
+    });
+  }
   roomContent.querySelector("#start-game")?.addEventListener("click", () => sendAction("start"));
   roomContent.querySelector("#answer-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -716,9 +815,13 @@ function renderGame(room, you) {
   const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
   const turnText = state.winner ? localizeMessage(room, state.message) :
     `${t("turn")}: ${room.players[state.turn]?.name || "Player"} (${state.turn === 0 ? "X" : "O"})`;
+  const winningLines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+  const winningCells = room.phase === "finished" && ["X", "O"].includes(state.winner)
+    ? new Set(winningLines.filter((line) => line.every((index) => state.board[index] === state.winner)).flat())
+    : new Set();
   return `<div class="game-status">${escapeHtml(turnText)}</div>
     <div class="tic-board">${state.board.map((mark, index) =>
-      `<button class="tic-cell" data-index="${index}" aria-label="Cell ${index + 1}${mark ? `: ${mark}` : ""}" ${!canPlay || mark ? "disabled" : ""}>${mark}</button>`).join("")}</div>`;
+      `<button class="tic-cell${winningCells.has(index) ? " tic-winning-cell" : ""}" data-index="${index}" aria-label="Cell ${index + 1}${mark ? `: ${mark}` : ""}${winningCells.has(index) ? `, ${t("winningCell")}` : ""}" ${!canPlay || mark ? "disabled" : ""}>${mark}</button>`).join("")}</div>`;
 }
 
 function drawPong(room) {
@@ -762,6 +865,10 @@ function leaveRoom() {
     sendAction("paddle", { direction: 0 });
   }
   clearInterval(pollTimer);
+  clearTimeout(fireworksTimer);
+  fireworksTimer = null;
+  document.querySelectorAll(".fireworks").forEach((element) => element.remove());
+  celebratedRoom = "";
   currentRoom = null;
   currentGame = "";
   currentPhase = "";
@@ -772,23 +879,28 @@ function leaveRoom() {
   homeScreen.classList.remove("hidden");
 }
 
+function openEntry(entry) {
+  pendingEntry = entry;
+  document.querySelector("#name-prompt").textContent = entry.code
+    ? `${t("joiningRoom")} ${entry.code.toUpperCase()}.`
+    : `${t("startingGame")} ${translations[language].words[entry.game][0]}.`;
+  customCodeGroup.classList.toggle("hidden", Boolean(entry.code));
+  customCodeInput.disabled = Boolean(entry.code);
+  customCodeInput.value = "";
+  nameInput.value = "";
+  nameError.textContent = "";
+  nameError.classList.add("hidden");
+  nameDialog.showModal();
+  nameInput.focus();
+}
+
 document.querySelectorAll(".choose-button").forEach((button) => {
-  button.addEventListener("click", () => {
-    pendingEntry = { game: button.dataset.game };
-    document.querySelector("#name-prompt").textContent = `${t("startingGame")} ${translations[language].words[pendingEntry.game][0]}.`;
-    nameInput.value = "";
-    nameDialog.showModal();
-    nameInput.focus();
-  });
+  button.addEventListener("click", () => openEntry({ game: button.dataset.game }));
 });
 
 document.querySelector("#join-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  pendingEntry = { code: document.querySelector("#join-code").value.trim() };
-  document.querySelector("#name-prompt").textContent = `${t("joiningRoom")} ${pendingEntry.code.toUpperCase()}.`;
-  nameInput.value = "";
-  nameDialog.showModal();
-  nameInput.focus();
+  openEntry({ code: document.querySelector("#join-code").value.trim() });
 });
 
 document.querySelector("#name-form").addEventListener("submit", async (event) => {
@@ -796,22 +908,36 @@ document.querySelector("#name-form").addEventListener("submit", async (event) =>
   const name = nameInput.value.trim();
   if (!name || !pendingEntry) return;
   const entry = pendingEntry;
-  pendingEntry = null;
-  nameDialog.close();
+  const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  nameError.classList.add("hidden");
   try {
+    let room;
     if (entry.code) {
-      enterRoom(await request("/api/join", {
+      room = await request("/api/join", {
         method: "POST",
         body: JSON.stringify({ code: entry.code, name }),
-      }));
+      });
     } else {
-      enterRoom(await request("/api/rooms", {
+      room = await request("/api/rooms", {
         method: "POST",
-        body: JSON.stringify({ name, game: entry.game }),
-      }));
+        body: JSON.stringify({ name, game: entry.game, code: customCodeInput.value }),
+      });
     }
+    if (pendingEntry !== entry) return;
+    pendingEntry = null;
+    nameDialog.close();
+    enterRoom(room);
   } catch (error) {
-    showToast(error.message);
+    if (pendingEntry !== entry) return;
+    const errorKey = {
+      "That room code is already in use.": "codeTaken",
+      "Room code must contain 4 to 16 letters or numbers.": "invalidCode",
+    }[error.message];
+    nameError.textContent = errorKey ? t(errorKey) : error.message;
+    nameError.classList.remove("hidden");
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
@@ -819,10 +945,15 @@ document.querySelector("#cancel-name").addEventListener("click", () => {
   pendingEntry = null;
   nameDialog.close();
 });
+nameDialog.addEventListener("cancel", () => {
+  pendingEntry = null;
+});
 
 document.querySelector("#leave-button").addEventListener("click", leaveRoom);
 
 function updatePaddle(event, direction) {
+  if (!currentRoom || currentGame !== "pong" || currentPhase !== "playing" ||
+    event.target instanceof HTMLElement && (event.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(event.target.tagName))) return;
   const key = event.key.toLowerCase();
   if (!["w", "s", "arrowup", "arrowdown"].includes(key)) return;
   event.preventDefault();
@@ -847,9 +978,23 @@ window.addEventListener("blur", () => {
   }
 });
 
+const invitation = new URL(window.location.href).searchParams.get("room");
+if (invitation !== null) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("room");
+  window.history.replaceState(null, "", url);
+  if (/^[A-Za-z0-9]{4,16}$/.test(invitation)) {
+    const code = invitation.toUpperCase();
+    document.querySelector("#join-code").value = code;
+    openEntry({ code });
+  } else {
+    showToast(t("invalidInvite"));
+  }
+}
+
 try {
   const savedRoom = JSON.parse(sessionStorage.getItem("play-together-room") || "null");
-  if (savedRoom?.code && /^[A-F0-9]{16}$/i.test(savedRoom.code) &&
+  if (invitation === null && savedRoom?.code && /^[A-Z0-9]{4,16}$/i.test(savedRoom.code) &&
     typeof savedRoom?.playerToken === "string" && /^[a-f0-9]{64}$/i.test(savedRoom.playerToken)) {
     currentRoom = savedRoom;
     refreshRoom().then(() => {
@@ -859,7 +1004,7 @@ try {
         pollTimer = setInterval(refreshRoom, 600);
       }
     });
-  } else if (savedRoom) {
+  } else if (invitation === null && savedRoom) {
     sessionStorage.removeItem("play-together-room");
   }
 } catch {

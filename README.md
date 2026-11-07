@@ -23,3 +23,13 @@ the root directory, choose the Node runtime, and set the build command to
 `npm install` and the start command to `npm start`. Render supplies `PORT`.
 
 Game rooms are held in memory and are cleared when the server restarts.
+
+Share the invitation link from the lobby, or enter a room code manually. When
+creating a room, an optional custom code can contain 4–16 letters or digits;
+leave it blank to generate a random code. Custom codes are easier to guess and
+are not passwords, so share them and invitation links only with people you
+want to invite.
+
+Winners see a victory badge and fireworks; both players see fireworks after a
+Tic-Tac-Toe win. The animation is disabled when the device is set to reduce
+motion.

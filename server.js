@@ -684,7 +684,16 @@ async function handleApi(request, response, url) {
       ].includes(game)) {
         return sendJson(response, 400, { error: "Choose a valid game." });
       }
-      const code = createCode();
+      let code;
+      if (body.code !== undefined && body.code !== "") {
+        if (typeof body.code !== "string" || !/^[A-Za-z0-9]{4,16}$/.test(body.code)) {
+          return sendJson(response, 400, { error: "Room code must contain 4 to 16 letters or numbers." });
+        }
+        code = body.code.toUpperCase();
+        if (rooms.has(code)) return sendJson(response, 409, { error: "That room code is already in use." });
+      } else {
+        code = createCode();
+      }
       const player = createPlayer();
       player.name = name;
       const room = {
@@ -705,7 +714,7 @@ async function handleApi(request, response, url) {
       const room = rooms.get(code);
       const name = cleanName(body.name);
       if (!name) return sendJson(response, 400, { error: "Enter a player name." });
-      if (!/^[A-F0-9]{16}$/.test(code) || !room || room.phase !== "lobby") {
+      if (!/^[A-Z0-9]{4,16}$/.test(code) || !room || room.phase !== "lobby") {
         return sendJson(response, 404, { error: "Room not found or unavailable." });
       }
       const capacity = ["pong", "tic-tac-toe", "connect-four", "memory-match", "battleship"].includes(room.game) ? 2 : 8;

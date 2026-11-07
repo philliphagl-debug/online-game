@@ -117,7 +117,7 @@
           </div>
           <form id="join-form" class="join-form">
             <label class="sr-only" for="join-code" data-i18n="roomCodeLabel">ROOM CODE</label>
-            <input id="join-code" maxlength="16" pattern="[A-Fa-f0-9]{16}" placeholder="ROOM CODE" autocomplete="off" required>
+            <input id="join-code" maxlength="16" pattern="[A-Za-z0-9]{4,16}" placeholder="ROOM CODE" autocomplete="off" required>
             <button class="button button-dark" type="submit"><span data-i18n="joinRoom">Join room</span> <span>→</span></button>
           </form>
         </section>
@@ -135,6 +135,12 @@
           <p id="name-prompt" data-i18n="namePrompt">Choose a name your friends will recognize.</p>
           <label for="player-name" data-i18n="playerName">PLAYER NAME</label>
           <input id="player-name" class="name-input" maxlength="20" autocomplete="nickname" required>
+          <div id="custom-code-group" class="custom-code-group hidden">
+            <label for="custom-code" data-i18n="customCode">CUSTOM ROOM CODE (OPTIONAL)</label>
+            <input id="custom-code" class="name-input" maxlength="16" pattern="[A-Za-z0-9]{4,16}" autocomplete="off" aria-describedby="custom-code-help">
+            <p id="custom-code-help" data-i18n="customCodeHelp">4–16 letters or numbers. Easy codes can be guessed; leave blank for a random code.</p>
+          </div>
+          <p id="name-error" class="form-error hidden" role="alert"></p>
           <div class="dialog-actions">
             <button id="cancel-name" class="button button-light" type="button" data-i18n="cancel">Cancel</button>
             <button class="button button-primary" type="submit"><span data-i18n="continue">Continue</span> <span>→</span></button>
