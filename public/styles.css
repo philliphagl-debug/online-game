@@ -238,8 +238,9 @@ footer span { color: #9269ee; margin-left: 4px; }
 .answer-form input { flex: 1; min-width: 0; }
 .quiz-scores { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .score-chip { background: var(--accent-soft); border-radius: 20px; padding: 6px 10px; color: var(--accent-text); font-size: 11px; }
-.canvas-wrap { width: 100%; max-width: 550px; margin: 4px auto; background: #17242c; border-radius: 12px; overflow: hidden; }
+.canvas-wrap { position: relative; width: 100%; max-width: 550px; margin: 4px auto; background: #17242c; border-radius: 12px; overflow: hidden; }
 #pong-canvas { display: block; width: 100%; aspect-ratio: 2 / 1; }
+.pong-countdown { position: absolute; inset: 0; display: grid; place-items: center; background: #10192380; color: #fff; font: 800 clamp(48px, 12vw, 90px)/1 "Space Grotesk", sans-serif; text-shadow: 0 4px 15px #000b; pointer-events: none; }
 .pong-controls { text-align: center; color: var(--muted); font-size: 11px; margin: 11px 0 0; }
 .pong-touch-controls { display: flex; justify-content: center; gap: 12px; margin: 12px 0 0; }
 .pong-touch-button { min-width: 64px; min-height: 48px; touch-action: none; user-select: none; }
@@ -408,18 +409,21 @@ footer span { color: #9269ee; margin-left: 4px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) and (max-width: 1000px) {
-  .shell:has(.pong-playing) .topbar { height: 48px; }
-  .pong-playing { padding: 6px 0 24px; }
+  .shell:has(.pong-playing) { padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); }
+  .shell:has(.pong-playing) .topbar { height: 40px; }
+  .shell:has(.pong-playing) .brand-mark { width: 26px; height: 26px; font-size: 16px; }
+  .pong-playing { padding: 3px 0 24px; }
+  .pong-playing .back-button { padding: 3px 0; }
   .pong-playing #room-content { display: flex; flex-direction: column; }
   .pong-playing .room-layout { order: -1; width: 100%; display: flex; flex-direction: column; gap: 12px; }
   .pong-playing .players-card { order: 0; }
-  .pong-playing .game-pong { padding: 8px; }
+  .pong-playing .game-pong { padding: 4px 8px; }
   .pong-playing .game-pong::before { display: none; }
-  .pong-playing .game-pong .game-status { margin: 0 auto 4px; padding: 3px 8px; }
+  .pong-playing .game-pong .game-status { margin: 0 auto 2px; padding: 1px 8px; min-height: 0; }
   .pong-playing .pong-play-area { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .pong-playing .canvas-wrap { width: min(100%, calc((100dvh - 125px) * 2)); margin: 0; }
-  .pong-playing .pong-touch-controls { flex-direction: column; gap: 10px; margin: 0; }
-  .pong-playing .pong-touch-button { min-width: 56px; min-height: 56px; }
-  .pong-playing .pong-controls { margin-top: 5px; }
+  .pong-playing .canvas-wrap { flex: 0 1 min(100%, calc((100dvh - 105px) * 2)); max-width: none; margin: 0; }
+  .pong-playing .pong-touch-controls { flex: 0 0 68px; flex-direction: column; align-self: stretch; gap: 8px; margin: 0; }
+  .pong-playing .pong-touch-button { flex: 1; min-width: 68px; min-height: 48px; font-size: 20px; }
+  .pong-playing .pong-controls { margin-top: 4px; }
   .pong-playing .room-heading { padding-top: 14px; }
 }

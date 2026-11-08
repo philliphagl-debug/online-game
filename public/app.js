@@ -401,6 +401,7 @@ Object.assign(translations.en, {
   soloGame: "Game", soloDifficulty: "Difficulty", soloEasy: "Easy", soloMedium: "Medium",
   soloHard: "Hard", soloStart: "Play solo", soloMode: "Single player", soloStarting: "Playing against a bot:",
   paddleUp: "Move paddle up", paddleDown: "Move paddle down",
+  pongCountdown: "Game starts in",
   pongConnection: "Live game connection interrupted. Reconnecting…",
   defeat: "Not this time!", resultDraw: "It's a draw!",
   battleshipDesc: "Place your fleet, then find and sink all five enemy ships.",
@@ -428,6 +429,7 @@ Object.assign(translations.de, {
   soloGame: "Spiel", soloDifficulty: "Schwierigkeit", soloEasy: "Leicht", soloMedium: "Mittel",
   soloHard: "Schwer", soloStart: "Alleine spielen", soloMode: "Einzelspieler", soloStarting: "Spiele gegen einen Bot:",
   paddleUp: "Schläger nach oben", paddleDown: "Schläger nach unten",
+  pongCountdown: "Spiel beginnt in",
   pongConnection: "Live-Verbindung unterbrochen. Verbindung wird wiederhergestellt…",
   defeat: "Diesmal leider verloren!", resultDraw: "Unentschieden!",
   battleshipDesc: "Platziere deine Flotte und versenke die fünf gegnerischen Schiffe.",
@@ -455,6 +457,7 @@ Object.assign(translations.zh, {
   soloGame: "游戏", soloDifficulty: "难度", soloEasy: "简单", soloMedium: "中等",
   soloHard: "困难", soloStart: "单人游戏", soloMode: "单人游戏", soloStarting: "与电脑对战：",
   paddleUp: "挡板向上", paddleDown: "挡板向下",
+  pongCountdown: "游戏即将开始",
   pongConnection: "实时连接已中断，正在重新连接…",
   defeat: "这次输了！", resultDraw: "平局！",
   battleshipDesc: "布置舰队，然后找到并击沉对方的五艘船。",
@@ -482,6 +485,7 @@ Object.assign(translations.es, {
   soloGame: "Juego", soloDifficulty: "Dificultad", soloEasy: "Fácil", soloMedium: "Medio",
   soloHard: "Difícil", soloStart: "Jugar solo", soloMode: "Un jugador", soloStarting: "Jugar contra un bot:",
   paddleUp: "Mover pala hacia arriba", paddleDown: "Mover pala hacia abajo",
+  pongCountdown: "El juego empieza en",
   pongConnection: "Conexión en vivo interrumpida. Reconectando…",
   defeat: "¡Esta vez no pudo ser!", resultDraw: "¡Empate!",
   battleshipDesc: "Coloca tu flota y hunde los cinco barcos rivales.",
@@ -644,6 +648,10 @@ let pongStreaming = false;
 let pongRetryTimer = null;
 let pongGameKey = "";
 const pressedKeys = new Set();
+const pongLandscape = window.matchMedia("(orientation: landscape) and (max-height: 500px) and (max-width: 1000px)");
+pongLandscape.addEventListener("change", (event) => {
+  if (event.matches && currentGame === "pong" && currentPhase === "playing") window.scrollTo(0, 0);
+});
 applyLanguage();
 
 function showToast(message) {
@@ -804,7 +812,7 @@ function renderRoom(room) {
     if (gameKey !== pongGameKey) {
       stopPongDisplay();
       pongGameKey = gameKey;
-      if (window.matchMedia("(orientation: landscape) and (max-height: 500px) and (max-width: 1000px)").matches) {
+      if (pongLandscape.matches) {
         window.scrollTo(0, 0);
       }
     }
@@ -821,7 +829,7 @@ function renderRoom(room) {
   }
   const { closesInMs, ...renderState } = room;
   if (room.game === "pong" && room.phase === "playing") {
-    const { ball, paddles, directions, scores, ...rest } = room.gameState;
+    const { ball, paddles, directions, scores, countdownMs, ...rest } = room.gameState;
     renderState.gameState = rest;
     delete renderState.playerToken;
   }
@@ -1035,7 +1043,7 @@ function renderGame(room, you) {
   if (room.game === "pong") {
     return `<div class="game-status">${escapeHtml(message || `${state.scores[0]} — ${state.scores[1]}`)}</div>
       <div class="pong-play-area">
-        <div class="canvas-wrap"><canvas id="pong-canvas" width="600" height="300" aria-label="Paddle Clash game field"></canvas></div>
+        <div class="canvas-wrap"><canvas id="pong-canvas" width="600" height="300" aria-label="Paddle Clash game field"></canvas>${room.phase === "playing" ? `<div class="pong-countdown${state.countdownMs > 0 ? "" : " hidden"}" role="status"><span class="sr-only">${t("pongCountdown")} </span><span class="pong-countdown-number">${state.countdownMs > 0 ? Math.ceil(state.countdownMs / 1000) : ""}</span></div>` : ""}</div>
         ${room.phase === "playing" && room.you >= 0 ? `<div class="pong-touch-controls"><button class="button button-light pong-touch-button" data-direction="-1" aria-label="${t("paddleUp")}">▲</button><button class="button button-light pong-touch-button" data-direction="1" aria-label="${t("paddleDown")}">▼</button></div>` : ""}
       </div>
       <p class="pong-controls">${room.phase === "finished" ? t("gameOver") : `W / S or ↑ / ↓ · ${t("firstToFive")}`}</p>`;
@@ -1225,6 +1233,14 @@ function animatePong(now) {
     y: lerp(first.state.ball.y, second.state.ball.y),
   };
   const scores = fraction < 1 ? first.state.scores : second.state.scores;
+  const displayed = fraction < 1 ? first : second;
+  const countdownMs = Math.max(0, (displayed.state.countdownMs || 0) - Math.max(0, target - displayed.receivedAt));
+  const countdown = roomContent.querySelector(".pong-countdown");
+  if (countdown) {
+    const seconds = Math.ceil(countdownMs / 1000);
+    countdown.classList.toggle("hidden", seconds === 0);
+    countdown.querySelector(".pong-countdown-number").textContent = seconds || "";
+  }
   const status = roomContent.querySelector(".game-pong .game-status");
   if (status) status.textContent = `${scores[0]} — ${scores[1]}`;
   drawPong({ ball, paddles: first.state.paddles.map((position, index) => lerp(position, second.state.paddles[index])), scores });

@@ -132,7 +132,7 @@ test("all single-player games and difficulties start with functioning opponents"
         const initial = created.data.gameState.ball.x;
         let moved = false;
         let result;
-        for (let attempt = 0; attempt < 12 && !moved; attempt += 1) {
+        for (let attempt = 0; attempt < 25 && (!moved || !result || result.data.gameState.ball.x === initial); attempt += 1) {
           await new Promise((resolve) => setTimeout(resolve, 200));
           result = await state();
           moved = result.data.gameState.paddles[1] !== 0.5;
@@ -446,9 +446,30 @@ test("Pong advances on the server while a group is playing", async () => {
   const group = await createGroup(2);
   const started = await action(group, group.players[0], "select-game", { game: "pong" });
   const initialX = started.data.room.gameState.ball.x;
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.ok(started.data.room.gameState.countdownMs > 2800);
+  const movingPlayer = group.players.find((player) => player.name === started.data.room.players[0].name);
+  await action(group, movingPlayer, "paddle", { direction: 1 });
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const during = await request(`/api/groups/state?code=${group.code}`, { token: group.players[1].token, ip: group.ip });
+  assert.equal(during.data.room.gameState.ball.x, initialX);
+  assert.ok(during.data.room.gameState.countdownMs > 0);
+  assert.ok(during.data.room.gameState.paddles[0] > 0.5);
+  await action(group, movingPlayer, "paddle", { direction: 0 });
+  await new Promise((resolve) => setTimeout(resolve, 2200));
   const state = await request(`/api/groups/state?code=${group.code}`, { token: group.players[0].token, ip: group.ip });
+  assert.equal(state.data.room.gameState.countdownMs, 0);
   assert.notEqual(state.data.room.gameState.ball.x, initialX);
+});
+
+test("Pong spectators see the same countdown without being able to move a paddle", async () => {
+  const group = await createGroup(3);
+  const started = await action(group, group.players[0], "select-game", { game: "pong" });
+  const spectator = group.players.find((player) => !started.data.room.players.some((member) => member.name === player.name));
+  const state = await request(`/api/groups/state?code=${group.code}`, { token: spectator.token, ip: group.ip });
+  assert.equal(state.data.room.you, -1);
+  assert.ok(state.data.room.gameState.countdownMs > 0);
+  assert.ok(state.data.room.gameState.countdownMs <= started.data.room.gameState.countdownMs);
+  assert.equal((await action(group, spectator, "paddle", { direction: 1 })).status, 403);
 });
 
 test("individual Pong rooms still allow joining and advance after starting", async () => {
@@ -465,7 +486,8 @@ test("individual Pong rooms still allow joining and advance after starting", asy
   });
   assert.equal(started.status, 200);
   assert.equal(started.data.phase, "playing");
-  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.ok(started.data.gameState.countdownMs > 2800);
+  await new Promise((resolve) => setTimeout(resolve, 3200));
   const state = await request(`/api/state?code=${code}`, { token: joined.data.playerToken, ip });
   assert.equal(state.status, 200);
   assert.notEqual(state.data.gameState.ball.x, started.data.gameState.ball.x);
@@ -494,8 +516,11 @@ test("Pong live streams require membership, advance, and close when a group memb
     buffer = lines.pop();
     states.push(...lines.map((line) => JSON.parse(line)));
   }
-  assert.notEqual(states[0].ball.x, states[2].ball.x);
-  assert.deepEqual(Object.keys(states[0]).sort(), ["ball", "paddles", "scores"]);
+  assert.equal(states[0].ball.x, 0.5);
+  assert.equal(states[2].ball.x, 0.5);
+  assert.ok(states[2].countdownMs < states[0].countdownMs);
+  assert.ok(states[2].countdownMs > 0);
+  assert.deepEqual(Object.keys(states[0]).sort(), ["ball", "countdownMs", "paddles", "scores"]);
   await action(group, group.players[0], "leave");
   while (!(await reader.read()).done) {}
   controller.abort();

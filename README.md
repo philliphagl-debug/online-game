@@ -25,7 +25,9 @@ required; solo games are private and separate from multiplayer rooms and groups.
 Paddle Clash supports keyboard and on-screen controls, including a compact
 phone landscape layout. Live updates arrive about every 50 ms and are
 interpolated for smooth rendering; scoring and collisions remain authoritative
-on the server. An unstable connection can still cause delays.
+on the server. Each Paddle Clash game starts with a shared three-second
+countdown; paddles can be moved during the countdown. An unstable connection
+can still cause delays.
 
 ## Deploy on Render
 

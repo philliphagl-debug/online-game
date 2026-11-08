@@ -14,6 +14,7 @@ if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new Error("PORT m
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_ROOMS = 500;
 const FINISHED_ROOM_LIFETIME_MS = 5000;
+const PONG_COUNTDOWN_MS = 3000;
 const MAX_PONG_STREAMS = 500;
 const BATTLE_SIZE = 10;
 const BATTLE_FLEET = [2, 3, 3, 4, 5];
@@ -249,6 +250,10 @@ function makeGameState(game) {
 
 function publicRoom(room, playerId) {
   const gameState = structuredClone(room.gameState);
+  if (room.game === "pong" && room.phase === "playing") {
+    gameState.countdownMs = Math.max(0, gameState.startsAt - Date.now());
+    delete gameState.startsAt;
+  }
   if (gameState.scores && !Array.isArray(gameState.scores)) {
     gameState.scores = room.players.map((player) => gameState.scores[player.id] || 0);
   }
@@ -449,6 +454,7 @@ function startRoom(room) {
   }
   room.phase = "playing";
   room.gameState = makeGameState(room.game);
+  if (room.game === "pong") room.gameState.startsAt = Date.now() + PONG_COUNTDOWN_MS;
   if (["quiz", "word-scramble", "rock-paper-scissors", "memory-match", "higher-lower"].includes(room.game)) {
     room.gameState.scores = Object.fromEntries(room.players.map((player) => [player.id, 0]));
   }
@@ -811,6 +817,7 @@ function updatePong(room) {
   const state = room.gameState;
   state.paddles = state.paddles.map((position, index) =>
     Math.max(0.12, Math.min(0.88, position + state.directions[index] * 0.018)));
+  if (Date.now() < state.startsAt) return;
   const ball = state.ball;
   ball.x += ball.vx;
   ball.y += ball.vy;
@@ -913,8 +920,9 @@ async function handleApi(request, response, url) {
           response.end('{"ended":true}\n');
           return;
         }
-        const { ball, paddles, scores } = game.gameState;
-        if (!response.write(`${JSON.stringify({ ball, paddles, scores })}\n`)) response.destroy();
+        const { ball, paddles, scores, startsAt } = game.gameState;
+        const countdownMs = Math.max(0, startsAt - Date.now());
+        if (!response.write(`${JSON.stringify({ ball, paddles, scores, countdownMs })}\n`)) response.destroy();
       }, 50);
       response.on("close", () => {
         clearInterval(timer);
