@@ -10,7 +10,7 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="Play Together home"><span class="brand-mark">P</span> play together</a>
+        <a class="brand" href="/" aria-label="Play Together home"><span class="brand-logo"><span class="brand-mark">P</span><span class="brand-version">v1.26</span></span> play together</a>
         <div class="topbar-actions">
           <label class="sr-only" for="language-select" data-i18n="selectLanguage">Select language</label>
           <select id="language-select" aria-label="Select language">
@@ -38,6 +38,30 @@
           <h1><span class="hero-first" data-i18n="heroFirst">Good games.</span><br><span data-i18n="heroSecond">Better together.</span></h1>
           <p data-i18n="heroDescription">Pick a game, invite your people, and let the fun happen. No downloads, no fuss.</p>
         </div>
+
+        <section class="solo-panel">
+          <div>
+            <h2 data-i18n="soloTitle">Play against a bot</h2>
+            <p data-i18n="soloDescription">Choose a game and difficulty, then play on your own.</p>
+          </div>
+          <form id="solo-form" class="solo-form">
+            <label for="solo-game" data-i18n="soloGame">Game</label>
+            <select id="solo-game">
+              <option value="tic-tac-toe">Tic-Tac-Toe</option>
+              <option value="connect-four">Connect Four</option>
+              <option value="memory-match">Memory Match</option>
+              <option value="battleship">Battleship</option>
+              <option value="pong">Paddle Clash</option>
+            </select>
+            <label for="solo-difficulty" data-i18n="soloDifficulty">Difficulty</label>
+            <select id="solo-difficulty">
+              <option value="easy" data-i18n="soloEasy">Easy</option>
+              <option value="medium" data-i18n="soloMedium" selected>Medium</option>
+              <option value="hard" data-i18n="soloHard">Hard</option>
+            </select>
+            <button type="submit" class="button button-primary" data-i18n="soloStart">Play solo</button>
+          </form>
+        </section>
 
         <section class="game-grid" aria-label="Choose a game" data-i18n-aria="chooseGame">
           <article class="game-card quiz-card">
@@ -170,6 +194,7 @@
       </dialog>
       <div id="toast" class="toast hidden" role="status"></div>
     </main>
+    <script src="/game-outcome.js" defer></script>
     <script src="/app.js" defer></script>
   </body>
 </html>

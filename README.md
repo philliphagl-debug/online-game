@@ -16,6 +16,14 @@ A lightweight browser-based multiplayer game hub powered by Node.js.
 The server uses the `PORT` environment variable when provided; otherwise it
 listens on port `3000`. No additional packages are required.
 
+## Single-player games
+
+Select **Play against a bot** on the home page to play Tic-Tac-Toe, Connect
+Four, Memory Match, Battleship, or Paddle Clash. Choose Easy, Medium, or Hard
+before entering your name. Bots run on the server, so a connection is still
+required; solo games are private and separate from multiplayer rooms and groups.
+Paddle Clash supports keyboard and on-screen controls.
+
 ## Deploy on Render
 
 Create a **Web Service** from the GitHub repository. Use the project root as
@@ -42,9 +50,10 @@ leave it blank to generate a random code. Custom codes are easier to guess and
 are not passwords, so share them and invitation links only with people you
 want to invite.
 
-Winners see a victory badge and fireworks; both players see fireworks after a
-Tic-Tac-Toe win. The animation is disabled when the device is set to reduce
-motion.
+Players see a win, loss, or draw badge and a matching animation after each
+finished game. Winners see fireworks; both players still see fireworks after a
+Tic-Tac-Toe win. Spectators and abandoned games do not get a personal result.
+Animations are disabled when the device is set to reduce motion.
 
 Choose Classic, Ocean, Sunset, Forest, Berry, or Citrus from the color selector in the header. The
 choice is saved in the current browser and does not change other players' themes.

@@ -397,6 +397,11 @@ const descriptionKeys = {
 };
 
 Object.assign(translations.en, {
+  soloTitle: "Play against a bot", soloDescription: "Choose a game and difficulty, then play on your own.",
+  soloGame: "Game", soloDifficulty: "Difficulty", soloEasy: "Easy", soloMedium: "Medium",
+  soloHard: "Hard", soloStart: "Play solo", soloMode: "Single player", soloStarting: "Playing against a bot:",
+  paddleUp: "Move paddle up", paddleDown: "Move paddle down",
+  defeat: "Not this time!", resultDraw: "It's a draw!",
   battleshipDesc: "Place your fleet, then find and sink all five enemy ships.",
   battlePlace: "Place your ships", battleNext: "Next ship length", battleHorizontal: "Horizontal",
   battleVertical: "Vertical", battleDirection: "Ship direction", battleReset: "Reset fleet",
@@ -418,6 +423,11 @@ Object.assign(translations.en, {
   groupJoining: "Joining group", groupLeave: "← Leave group", abandoned: "A player left. This game has ended.",
 });
 Object.assign(translations.de, {
+  soloTitle: "Spiele gegen einen Bot", soloDescription: "Wähle ein Spiel und einen Schwierigkeitsgrad.",
+  soloGame: "Spiel", soloDifficulty: "Schwierigkeit", soloEasy: "Leicht", soloMedium: "Mittel",
+  soloHard: "Schwer", soloStart: "Alleine spielen", soloMode: "Einzelspieler", soloStarting: "Spiele gegen einen Bot:",
+  paddleUp: "Schläger nach oben", paddleDown: "Schläger nach unten",
+  defeat: "Diesmal leider verloren!", resultDraw: "Unentschieden!",
   battleshipDesc: "Platziere deine Flotte und versenke die fünf gegnerischen Schiffe.",
   battlePlace: "Platziere deine Schiffe", battleNext: "Länge des nächsten Schiffs", battleHorizontal: "Waagerecht",
   battleVertical: "Senkrecht", battleDirection: "Schiffsrichtung", battleReset: "Flotte zurücksetzen",
@@ -439,6 +449,11 @@ Object.assign(translations.de, {
   groupJoining: "Beitritt zur Gruppe", groupLeave: "← Gruppe verlassen", abandoned: "Ein Spieler hat die Gruppe verlassen. Das Spiel wurde beendet.",
 });
 Object.assign(translations.zh, {
+  soloTitle: "与电脑对战", soloDescription: "选择游戏和难度，独自开始游戏。",
+  soloGame: "游戏", soloDifficulty: "难度", soloEasy: "简单", soloMedium: "中等",
+  soloHard: "困难", soloStart: "单人游戏", soloMode: "单人游戏", soloStarting: "与电脑对战：",
+  paddleUp: "挡板向上", paddleDown: "挡板向下",
+  defeat: "这次输了！", resultDraw: "平局！",
   battleshipDesc: "布置舰队，然后找到并击沉对方的五艘船。",
   battlePlace: "布置你的舰船", battleNext: "下一艘船的长度", battleHorizontal: "横向",
   battleVertical: "纵向", battleDirection: "舰船方向", battleReset: "重置舰队",
@@ -460,6 +475,11 @@ Object.assign(translations.zh, {
   groupJoining: "加入小组", groupLeave: "← 离开小组", abandoned: "一名玩家离开，小组游戏已结束。",
 });
 Object.assign(translations.es, {
+  soloTitle: "Juega contra un bot", soloDescription: "Elige un juego y una dificultad para jugar por tu cuenta.",
+  soloGame: "Juego", soloDifficulty: "Dificultad", soloEasy: "Fácil", soloMedium: "Medio",
+  soloHard: "Difícil", soloStart: "Jugar solo", soloMode: "Un jugador", soloStarting: "Jugar contra un bot:",
+  paddleUp: "Mover pala hacia arriba", paddleDown: "Mover pala hacia abajo",
+  defeat: "¡Esta vez no pudo ser!", resultDraw: "¡Empate!",
   battleshipDesc: "Coloca tu flota y hunde los cinco barcos rivales.",
   battlePlace: "Coloca tus barcos", battleNext: "Longitud del siguiente barco", battleHorizontal: "Horizontal",
   battleVertical: "Vertical", battleDirection: "Dirección del barco", battleReset: "Reiniciar flota",
@@ -558,6 +578,9 @@ function applyLanguage() {
     card.querySelector("p").textContent = words[1];
     card.querySelector(".choose-button").firstChild.textContent = `${words[2]} `;
   });
+  document.querySelectorAll("#solo-game option").forEach((option) => {
+    option.textContent = translations[language].words[option.value][0];
+  });
   if (currentRoom) {
     lastRendered = "";
     refreshRoom();
@@ -606,8 +629,10 @@ let currentSpectator = false;
 let lastPaddleDirection = 0;
 let celebratedRoom = "";
 let fireworksTimer = null;
+let resultEffectTimer = null;
 let roomCloseTimer = null;
 let battleOrientation = "horizontal";
+let touchPaddlePointer = null;
 const pressedKeys = new Set();
 applyLanguage();
 
@@ -635,7 +660,8 @@ async function request(url, options = {}) {
 
 function enterRoom(room) {
   const isGroup = Boolean(room.members);
-  currentRoom = { code: room.code, playerToken: room.playerToken, ...(isGroup ? { kind: "group" } : {}) };
+  currentRoom = { code: room.code, playerToken: room.playerToken,
+    ...(isGroup ? { kind: "group" } : room.mode === "single" ? { kind: "single" } : {}) };
   currentGame = isGroup ? "" : room.game;
   currentPhase = isGroup ? "" : room.phase;
   groupRound = 0;
@@ -703,33 +729,27 @@ async function sendAction(action, extra = {}) {
   }
 }
 
-function playerWon(room) {
-  if (room.phase !== "finished" || room.you < 0 || room.gameState.abandoned) return false;
-  const state = room.gameState;
-  if (room.game === "hangman") {
-    return typeof state.word === "string" && [...state.word].every((letter) => state.guesses.includes(letter));
-  }
-  if (room.game === "reaction-race" || room.game === "battleship") {
-    return state.winner === room.you;
-  }
-  if (room.game === "tic-tac-toe" || room.game === "connect-four") {
-    const marks = room.game === "tic-tac-toe" ? ["X", "O"] : ["R", "Y"];
-    return state.winner === marks[room.you];
-  }
-  if (room.game === "higher-lower" && state.scores.reduce((sum, score) => sum + score, 0) < 10) {
-    return false;
-  }
-  if (["quiz", "word-scramble", "pong", "memory-match", "rock-paper-scissors", "higher-lower"].includes(room.game)) {
-    const highScore = Math.max(...state.scores);
-    if (["memory-match", "rock-paper-scissors"].includes(room.game) &&
-      state.scores.filter((score) => score === highScore).length > 1) return false;
-    return state.scores.indexOf(highScore) === room.you;
-  }
-  return false;
+function showResultEffect(outcome) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  clearTimeout(resultEffectTimer);
+  document.querySelectorAll(".result-effect").forEach((element) => element.remove());
+  const effect = document.createElement("div");
+  effect.className = `result-effect result-effect-${outcome}`;
+  effect.setAttribute("aria-hidden", "true");
+  const symbol = document.createElement("span");
+  symbol.textContent = outcome === "win" ? "★" : outcome === "loss" ? "↻" : "=";
+  effect.appendChild(symbol);
+  document.body.appendChild(effect);
+  resultEffectTimer = setTimeout(() => {
+    effect.remove();
+    resultEffectTimer = null;
+  }, 2600);
 }
 
 function celebrateVictory() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  clearTimeout(fireworksTimer);
+  document.querySelectorAll(".fireworks").forEach((element) => element.remove());
   const fireworks = document.createElement("div");
   fireworks.className = "fireworks";
   fireworks.setAttribute("aria-hidden", "true");
@@ -796,13 +816,14 @@ function renderRoom(room) {
   const you = room.players[room.you] || (group ? { isHost: group.isHost } : null);
   if (!you) return;
   const gameName = translations[language].words[room.game][0];
-  const won = playerWon(room);
-  const celebrate = won || (room.game === "tic-tac-toe" && room.phase === "finished" && !room.gameState.abandoned &&
+  const outcome = gameOutcome(room);
+  const celebrate = outcome === "win" || (room.you >= 0 && room.game === "tic-tac-toe" && room.phase === "finished" && !room.gameState.abandoned &&
     ["X", "O"].includes(room.gameState.winner));
   const celebrationKey = group ? `${room.code}:${group.round}` : room.code;
-  if (celebrate && celebratedRoom !== celebrationKey) {
+  if (outcome && celebratedRoom !== celebrationKey) {
     celebratedRoom = celebrationKey;
-    celebrateVictory();
+    showResultEffect(outcome);
+    if (celebrate) celebrateVictory();
   }
   document.querySelector("#leave-button").textContent = group ? t("groupLeave") : t("backToGames");
   const groupLobby = group && group.round === 0;
@@ -812,14 +833,15 @@ function renderRoom(room) {
     <div class="room-heading">
       <div class="eyebrow"><span>✦</span> ${escapeHtml(groupLobby ? t("groupLobby") : gameName)}</div>
       <h1>${groupLobby ? t("groupLobby") : room.phase === "lobby" ? t("gameNight") : room.phase === "finished" ? t("gameOver") : t("letGamesBegin")}</h1>
-      ${won ? `<div class="victory-badge"><span aria-hidden="true">✦</span> ${t("victory")} <span aria-hidden="true">✦</span></div>` : ""}
+      ${outcome ? `<div class="result-badge result-${outcome}" role="status"><span aria-hidden="true">${outcome === "win" ? "★" : outcome === "loss" ? "↻" : "="}</span> ${t(outcome === "win" ? "victory" : outcome === "loss" ? "defeat" : "resultDraw")}</div>` : ""}
       <p>${groupLobby ? t("groupInvite") : room.phase === "lobby" ? t("shareCode") : t(descriptionKeys[room.game])}</p>
       ${!group && room.phase === "finished" ? `<p class="room-closing" role="status">${t("roomClosing")}</p>` : ""}
-      <div class="room-code"><span>${group ? t("groupCode") : t("taglineJoin")}</span><strong>${escapeHtml(room.code)}</strong><button id="copy-code">${t("copy")}</button></div>
+      ${room.mode === "single" ? `<div class="room-code"><strong>${t("soloMode")} · ${t({ easy: "soloEasy", medium: "soloMedium", hard: "soloHard" }[room.difficulty])}</strong></div>` :
+        `<div class="room-code"><span>${group ? t("groupCode") : t("taglineJoin")}</span><strong>${escapeHtml(room.code)}</strong><button id="copy-code">${t("copy")}</button></div>`}
       ${group || room.phase === "lobby" ? `<div class="invite-share"><label for="invite-link">${t("inviteLink")}</label><div><input id="invite-link" type="text" readonly><button id="copy-link" class="button button-primary">${t("copyLink")}</button></div></div>` : ""}
     </div>
     <div class="room-layout">
-      <section class="play-card">${groupLobby ? `<h3>${t("groupLobby")}</h3><p class="room-note">${t("groupWaiting")}</p>` : renderGame(room, you)}</section>
+      <section class="play-card${!groupLobby && room.phase !== "lobby" ? ` game-stage game-${room.game}` : ""}">${groupLobby ? `<h3>${t("groupLobby")}</h3><p class="room-note">${t("groupWaiting")}</p>` : renderGame(room, you)}</section>
       <aside class="players-card">
         <h3>${group ? t("groupMembers") : t("players")} <span>(${memberList.length})</span></h3>
         ${memberList.map((player) => `
@@ -933,7 +955,16 @@ function renderRoom(room) {
     cell.addEventListener("click", () => sendAction("drop", { column: Number(cell.dataset.column) }));
   });
   roomContent.querySelector(".reaction-button")?.addEventListener("click", () => sendAction("react"));
-  if (room.game === "pong" && room.phase === "playing") drawPong(room);
+  roomContent.querySelectorAll(".pong-touch-button").forEach((button) => {
+    button.addEventListener("pointerdown", (event) => {
+      if (touchPaddlePointer !== null) return;
+      event.preventDefault();
+      touchPaddlePointer = event.pointerId;
+      lastPaddleDirection = Number(button.dataset.direction);
+      sendAction("paddle", { direction: lastPaddleDirection });
+    });
+  });
+  if (room.game === "pong" && room.phase !== "lobby") drawPong(room);
 }
 
 function renderGame(room, you) {
@@ -975,7 +1006,8 @@ function renderGame(room, you) {
   if (room.game === "pong") {
     return `<div class="game-status">${escapeHtml(message || `${state.scores[0]} — ${state.scores[1]}`)}</div>
       <div class="canvas-wrap"><canvas id="pong-canvas" width="600" height="300" aria-label="Paddle Clash game field"></canvas></div>
-      <p class="pong-controls">${room.phase === "finished" ? t("gameOver") : `W / S or ↑ / ↓ · ${t("firstToFive")}`}</p>`;
+      <p class="pong-controls">${room.phase === "finished" ? t("gameOver") : `W / S or ↑ / ↓ · ${t("firstToFive")}`}</p>
+      ${room.phase === "playing" && room.you >= 0 ? `<div class="pong-touch-controls"><button class="button button-light pong-touch-button" data-direction="-1" aria-label="${t("paddleUp")}">▲</button><button class="button button-light pong-touch-button" data-direction="1" aria-label="${t("paddleDown")}">▼</button></div>` : ""}`;
   }
   if (room.game === "connect-four") {
     const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
@@ -1102,15 +1134,18 @@ function escapeHtml(value) {
 }
 
 function leaveRoom() {
-  if (currentRoom && currentRoom.kind !== "group" && currentGame === "pong" && currentPhase === "playing" && lastPaddleDirection !== 0) {
+  if (currentRoom && !currentRoom.kind && currentGame === "pong" && currentPhase === "playing" && lastPaddleDirection !== 0) {
     sendAction("paddle", { direction: 0 });
   }
   clearInterval(pollTimer);
   clearTimeout(roomCloseTimer);
   roomCloseTimer = null;
   clearTimeout(fireworksTimer);
+  clearTimeout(resultEffectTimer);
   fireworksTimer = null;
+  resultEffectTimer = null;
   document.querySelectorAll(".fireworks").forEach((element) => element.remove());
+  document.querySelectorAll(".result-effect").forEach((element) => element.remove());
   celebratedRoom = "";
   currentRoom = null;
   currentGame = "";
@@ -1119,6 +1154,7 @@ function leaveRoom() {
   groupRound = 0;
   lastRenderContext = "";
   lastPaddleDirection = 0;
+  touchPaddlePointer = null;
   pressedKeys.clear();
   sessionStorage.removeItem("play-together-room");
   roomScreen.classList.add("hidden");
@@ -1129,9 +1165,10 @@ function openEntry(entry) {
   pendingEntry = entry;
   document.querySelector("#name-prompt").textContent = entry.code
     ? `${t(entry.kind === "group" ? "groupJoining" : "joiningRoom")} ${entry.code.toUpperCase()}.`
-    : entry.kind === "group" ? t("groupStarting") : `${t("startingGame")} ${translations[language].words[entry.game][0]}.`;
-  customCodeGroup.classList.toggle("hidden", Boolean(entry.code));
-  customCodeInput.disabled = Boolean(entry.code);
+    : entry.kind === "group" ? t("groupStarting") : `${t(entry.kind === "single" ? "soloStarting" : "startingGame")} ${translations[language].words[entry.game][0]}.`;
+  const hideCustomCode = Boolean(entry.code) || entry.kind === "single";
+  customCodeGroup.classList.toggle("hidden", hideCustomCode);
+  customCodeInput.disabled = hideCustomCode;
   customCodeInput.value = "";
   nameInput.value = "";
   nameError.textContent = "";
@@ -1142,6 +1179,12 @@ function openEntry(entry) {
 
 document.querySelectorAll(".choose-button").forEach((button) => {
   button.addEventListener("click", () => openEntry({ game: button.dataset.game }));
+});
+
+document.querySelector("#solo-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  openEntry({ kind: "single", game: document.querySelector("#solo-game").value,
+    difficulty: document.querySelector("#solo-difficulty").value });
 });
 
 document.querySelector("#create-group").addEventListener("click", () => openEntry({ kind: "group" }));
@@ -1169,6 +1212,11 @@ document.querySelector("#name-form").addEventListener("submit", async (event) =>
       room = await request(entry.kind === "group" ? "/api/groups/join" : "/api/join", {
         method: "POST",
         body: JSON.stringify({ code: entry.code, name }),
+      });
+    } else if (entry.kind === "single") {
+      room = await request("/api/single", {
+        method: "POST",
+        body: JSON.stringify({ name, game: entry.game, difficulty: entry.difficulty }),
       });
     } else {
       room = await request(entry.kind === "group" ? "/api/groups" : "/api/rooms", {
@@ -1202,6 +1250,21 @@ nameDialog.addEventListener("cancel", () => {
 });
 
 document.querySelector("#leave-button").addEventListener("click", async () => {
+  if (currentRoom?.kind === "single") {
+    const session = currentRoom;
+    try {
+      await request("/api/action", {
+        method: "POST",
+        body: JSON.stringify({ code: session.code, action: "leave" }),
+        playerToken: session.playerToken,
+      });
+      if (currentRoom === session) leaveRoom();
+    } catch (error) {
+      if (error.status === 404 && currentRoom === session) leaveRoom();
+      else showToast(error.message);
+    }
+    return;
+  }
   if (currentRoom?.kind === "group") {
     const session = currentRoom;
     try {
@@ -1237,8 +1300,19 @@ function updatePaddle(event, direction) {
 }
 window.addEventListener("keydown", (event) => updatePaddle(event, 1));
 window.addEventListener("keyup", (event) => updatePaddle(event, 0));
+function releaseTouchPaddle(event) {
+  if (event.pointerId !== touchPaddlePointer) return;
+  touchPaddlePointer = null;
+  if (currentRoom && currentGame === "pong" && currentPhase === "playing") {
+    lastPaddleDirection = 0;
+    sendAction("paddle", { direction: 0 });
+  }
+}
+window.addEventListener("pointerup", releaseTouchPaddle);
+window.addEventListener("pointercancel", releaseTouchPaddle);
 window.addEventListener("blur", () => {
   pressedKeys.clear();
+  touchPaddlePointer = null;
   if (currentRoom && currentGame === "pong" && currentPhase === "playing" &&
     lastPaddleDirection !== 0) {
     lastPaddleDirection = 0;

@@ -65,6 +65,105 @@ function action(group, player, actionName, extra = {}) {
   });
 }
 
+test("single-player sessions validate games, difficulty, and access", async () => {
+  const ip = `198.51.100.${ipCounter++}`;
+  for (const body of [
+    { name: "Player", game: "quiz", difficulty: "hard" },
+    { name: "Player", game: "pong", difficulty: "impossible" },
+    { name: "", game: "pong", difficulty: "easy" },
+  ]) {
+    assert.equal((await request("/api/single", { body, ip })).status, 400);
+  }
+  const created = await request("/api/single", { body: { name: "Player", game: "tic-tac-toe", difficulty: "hard" }, ip });
+  assert.equal(created.status, 201);
+  assert.equal(created.data.mode, "single");
+  assert.equal(created.data.difficulty, "hard");
+  assert.equal(created.data.players.length, 2);
+  assert.equal(created.data.phase, "playing");
+  assert.equal((await request("/api/join", { body: { name: "Other", code: created.data.code }, ip })).status, 404);
+  assert.equal((await request(`/api/state?code=${created.data.code}`, { token: "a".repeat(64), ip })).status, 404);
+  assert.equal((await request("/api/action", { token: created.data.playerToken, body: { code: created.data.code, action: "leave" }, ip })).status, 200);
+  assert.equal((await request(`/api/state?code=${created.data.code}`, { token: created.data.playerToken, ip })).status, 404);
+});
+
+test("all single-player games and difficulties start with functioning opponents", async () => {
+  for (const game of ["tic-tac-toe", "connect-four", "memory-match", "battleship", "pong"]) {
+    for (const difficulty of ["easy", "medium", "hard"]) {
+      const ip = `198.51.100.${ipCounter++}`;
+      const created = await request("/api/single", { body: { name: "Player", game, difficulty }, ip });
+      assert.equal(created.status, 201, `${game} ${difficulty}`);
+      const { code, playerToken: token } = created.data;
+      const command = (actionName, extra = {}) => request("/api/action", {
+        token, body: { code, action: actionName, ...extra }, ip,
+      });
+      const state = () => request(`/api/state?code=${code}`, { token, ip });
+      if (game === "tic-tac-toe" || game === "connect-four") {
+        const commandBody = game === "tic-tac-toe" ? ["move", { index: 0 }] : ["drop", { column: 0 }];
+        assert.equal((await command(...commandBody)).status, 200);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const result = await state();
+        assert.equal(result.data.gameState.turn, 0, `${game} ${difficulty}`);
+        assert.equal(result.data.gameState.board.filter(Boolean).length, 2);
+      } else if (game === "battleship") {
+        for (const index of [0, 10, 20, 30, 40]) {
+          assert.equal((await command("place-ship", { index, orientation: "horizontal" })).status, 200);
+        }
+        assert.equal((await command("ready-fleet")).data.gameState.stage, "battle");
+        assert.equal((await command("fire", { index: 0 })).status, 200);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        assert.equal((await state()).data.gameState.turn, 0, `${game} ${difficulty}`);
+      } else if (game === "memory-match") {
+        let current = created.data.gameState;
+        while (current.turn === 0 && current.revealed.length < 2 && current.matched.filter(Boolean).length < 16) {
+          const index = current.matched.findIndex((matched, i) => !matched && !current.revealed.includes(i));
+          current = (await command("flip", { index })).data.gameState;
+        }
+        assert.equal(current.revealed.length, 2);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        let progressed = false;
+        for (let attempt = 0; attempt < 20 && !progressed; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          const result = (await state()).data.gameState;
+          progressed = (result.turn === 0 && result.revealed.length === 0) || (result.turn === 1 && result.revealed.length === 1) ||
+            result.matched.filter(Boolean).length > current.matched.filter(Boolean).length;
+        }
+        assert.ok(progressed, `Memory bot did not play on ${difficulty}`);
+      } else {
+        const initial = created.data.gameState.ball.x;
+        let moved = false;
+        let result;
+        for (let attempt = 0; attempt < 12 && !moved; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          result = await state();
+          moved = result.data.gameState.paddles[1] !== 0.5;
+        }
+        assert.notEqual(result.data.gameState.ball.x, initial);
+        assert.ok(moved, `Pong bot moved on ${difficulty}`);
+      }
+      assert.equal((await command("leave")).status, 200);
+    }
+  }
+});
+
+test("a complete single-player Tic-Tac-Toe game reaches a result", async () => {
+  const ip = `198.51.100.${ipCounter++}`;
+  const created = await request("/api/single", { body: { name: "Player", game: "tic-tac-toe", difficulty: "hard" }, ip });
+  const { code, playerToken: token } = created.data;
+  let room = created.data;
+  for (let attempt = 0; attempt < 30 && room.phase === "playing"; attempt += 1) {
+    if (room.gameState.turn === 0) {
+      const index = room.gameState.board.findIndex((mark) => !mark);
+      room = (await request("/api/action", { token, body: { code, action: "move", index }, ip })).data;
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      room = (await request(`/api/state?code=${code}`, { token, ip })).data;
+    }
+  }
+  assert.equal(room.phase, "finished");
+  assert.ok(["O", "draw"].includes(room.gameState.winner));
+  assert.ok(room.closesInMs > 0);
+});
+
 test("groups retain members across games and prevent three consecutive identical pairs", async () => {
   const group = await createGroup(3);
   const previous = [];

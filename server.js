@@ -2,6 +2,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const { randomBytes, randomUUID, timingSafeEqual } = require("node:crypto");
+const bots = require("./bots");
 
 const publicDirectory = path.join(__dirname, "public");
 const rooms = new Map();
@@ -317,6 +318,7 @@ function publicRoom(room, playerId) {
     code: room.code,
     game: room.game,
     phase: room.phase,
+    ...(room.bot ? { mode: "single", difficulty: room.bot.difficulty } : {}),
     ...(room.closesAt ? { closesInMs: Math.max(0, room.closesAt - Date.now()) } : {}),
     players: room.players.map((player, index) => ({
       name: player.name,
@@ -339,7 +341,7 @@ function findRoom(request, code, collection = rooms) {
   if (!room) throw Object.assign(new Error("Room not found or access denied."), { status: 404 });
   const authorization = request.headers.authorization || "";
   const match = /^Bearer ([a-f0-9]{64})$/i.exec(authorization);
-  const player = match && room.players.find((item) => isValidToken(match[1], item.token));
+  const player = match && room.players.find((item) => !item.isBot && isValidToken(match[1], item.token));
   if (!player) throw Object.assign(new Error("Room not found or access denied."), { status: 404 });
   return { room, player };
 }
@@ -830,8 +832,82 @@ function updatePong(room) {
   }
 }
 
+function prepareBotFleet(room) {
+  const player = room.players[1];
+  const board = room.gameState.boards[player.id];
+  for (const length of BATTLE_FLEET) {
+    const placements = [];
+    for (let index = 0; index < BATTLE_SIZE * BATTLE_SIZE; index += 1) {
+      for (const orientation of ["horizontal", "vertical"]) {
+        const row = Math.floor(index / BATTLE_SIZE);
+        const column = index % BATTLE_SIZE;
+        if ((orientation === "horizontal" ? column : row) + length > BATTLE_SIZE) continue;
+        const step = orientation === "horizontal" ? 1 : BATTLE_SIZE;
+        const cells = Array.from({ length }, (_, cell) => index + cell * step);
+        if (!board.ships.some((ship) => ship.cells.some((cell) => cells.includes(cell)))) {
+          placements.push({ index, orientation });
+        }
+      }
+    }
+    if (!placements.length) throw new Error("Bot could not place its fleet.");
+    const placement = placements[Math.floor(Math.random() * placements.length)];
+    applyCommand(room, player, { action: "place-ship", ...placement });
+  }
+  applyCommand(room, player, { action: "ready-fleet" });
+}
+
+function runBot(room, now) {
+  if (!room.bot || room.phase !== "playing" || now < room.bot.nextAt) return;
+  const bot = room.bot;
+  const player = room.players[1];
+  const state = room.gameState;
+  const delay = { easy: 900, medium: 600, hard: 350 }[bot.difficulty];
+  bot.nextAt = now + delay;
+  if (room.game === "pong") {
+    bot.pongOffset = Math.random() * 2 - 1;
+    state.directions[1] = bots.pongDirection(state, bot);
+    return;
+  }
+  if (room.game === "battleship" && state.stage === "placement") return;
+  if (state.turn !== 1) return;
+  if (room.game === "tic-tac-toe") {
+    applyCommand(room, player, { action: "move", index: bots.ticMove([...state.board], bot.difficulty) });
+  } else if (room.game === "connect-four") {
+    applyCommand(room, player, { action: "drop", column: bots.connectMove([...state.board], bot.difficulty) });
+  } else if (room.game === "memory-match" && state.revealed.length < 2) {
+    applyCommand(room, player, { action: "flip", index: bots.memoryMove(state, bot) });
+    bots.rememberCards(bot, state);
+  } else if (room.game === "battleship") {
+    const visibleBoard = publicRoom(room, player.id).gameState.targetBoard;
+    applyCommand(room, player, { action: "fire", index: bots.battleMove(visibleBoard, bot.difficulty) });
+  }
+}
+
 async function handleApi(request, response, url) {
   try {
+    if (request.method === "POST" && url.pathname === "/api/single") {
+      if (rooms.size + groups.size >= MAX_ROOMS) {
+        return sendJson(response, 503, { error: "The server is full. Please try again later." });
+      }
+      const body = await readJson(request);
+      const name = cleanName(body.name);
+      if (!name) return sendJson(response, 400, { error: "Enter a player name." });
+      if (!TWO_PLAYER_GAMES.includes(body.game) || !bots.DIFFICULTIES.includes(body.difficulty)) {
+        return sendJson(response, 400, { error: "Choose a valid game and difficulty." });
+      }
+      const player = createPlayer();
+      player.name = name;
+      const opponent = { id: randomUUID(), name: "Bot", isBot: true };
+      const room = {
+        code: createCode(), game: body.game, phase: "lobby", hostId: player.id,
+        players: [player, opponent], gameState: makeGameState(body.game), createdAt: Date.now(),
+        bot: { difficulty: body.difficulty, nextAt: 0, memory: {}, pongOffset: 0 },
+      };
+      startRoom(room);
+      if (room.game === "battleship") prepareBotFleet(room);
+      rooms.set(room.code, room);
+      return sendJson(response, 201, { ...publicRoom(room, player.id), playerToken: player.token });
+    }
     if (request.method === "POST" && url.pathname === "/api/groups") {
       if (rooms.size + groups.size >= MAX_ROOMS) {
         return sendJson(response, 503, { error: "The server is full. Please try again later." });
@@ -951,7 +1027,12 @@ async function handleApi(request, response, url) {
     if (request.method === "POST" && url.pathname === "/api/action") {
       const body = await readJson(request);
       const { room, player } = findRoom(request, body.code);
+      if (room.bot && body.action === "leave") {
+        rooms.delete(room.code);
+        return sendJson(response, 200, { left: true });
+      }
       applyCommand(room, player, body);
+      if (room.bot && room.game === "memory-match") bots.rememberCards(room.bot, room.gameState);
       return sendJson(response, 200, publicRoom(room, player.id));
     }
     return sendJson(response, 404, { error: "Not found." });
@@ -979,7 +1060,7 @@ const server = http.createServer((request, response) => {
     const route = request.method === "GET" && url.pathname === "/api/groups/state" ? "group-state" :
       request.method === "GET" && url.pathname === "/api/state" ? "state" :
       request.method === "POST" && ["/api/action", "/api/groups/action"].includes(url.pathname) ? "action" :
-        request.method === "POST" && ["/api/rooms", "/api/groups"].includes(url.pathname) ? "create" :
+        request.method === "POST" && ["/api/rooms", "/api/groups", "/api/single"].includes(url.pathname) ? "create" :
           request.method === "POST" && ["/api/join", "/api/groups/join"].includes(url.pathname) ? "join" : "default";
     const retryAfter = enforceRateLimit(request, route);
     if (retryAfter) return rateLimitResponse(response, retryAfter);
@@ -991,7 +1072,7 @@ const server = http.createServer((request, response) => {
   }
   const requestedFile = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
   if (request.method !== "GET" || !Object.prototype.hasOwnProperty.call(MIME_TYPES, path.extname(requestedFile)) ||
-    !["index.html", "app.js", "styles.css"].includes(requestedFile)) {
+    !["index.html", "app.js", "game-outcome.js", "styles.css"].includes(requestedFile)) {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     response.end("Not found");
     return;
@@ -1024,6 +1105,13 @@ setInterval(() => {
     if (group.game) updatePong(group.game);
   }
 }, 16);
+
+setInterval(() => {
+  const now = Date.now();
+  for (const room of rooms.values()) {
+    if (room.bot) runBot(room, now);
+  }
+}, 100);
 
 server.listen(PORT, () => {
   console.log(`Play Together is ready at http://localhost:${PORT}`);
