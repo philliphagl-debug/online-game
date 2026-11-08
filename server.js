@@ -8,11 +8,13 @@ const publicDirectory = path.join(__dirname, "public");
 const rooms = new Map();
 const groups = new Map();
 const requestBuckets = new Map();
+const pongStreams = new Set();
 const PORT = Number(process.env.PORT || 3000);
 if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) throw new Error("PORT must be a valid TCP port.");
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_ROOMS = 500;
 const FINISHED_ROOM_LIFETIME_MS = 5000;
+const MAX_PONG_STREAMS = 500;
 const BATTLE_SIZE = 10;
 const BATTLE_FLEET = [2, 3, 3, 4, 5];
 const TWO_PLAYER_GAMES = ["pong", "tic-tac-toe", "connect-four", "memory-match", "battleship"];
@@ -885,6 +887,41 @@ function runBot(room, now) {
 
 async function handleApi(request, response, url) {
   try {
+    if (request.method === "GET" && url.pathname === "/api/pong-stream") {
+      const collection = url.searchParams.get("group") === "1" ? groups : rooms;
+      const { room: container, player } = findRoom(request, url.searchParams.get("code"), collection);
+      const game = collection === groups ? container.game : container;
+      if (!game || game.game !== "pong" || game.phase !== "playing") {
+        return sendJson(response, 409, { error: "Paddle Clash is not playing." });
+      }
+      if (pongStreams.size >= MAX_PONG_STREAMS ||
+        [...pongStreams].filter((stream) => stream.playerId === player.id).length >= 2) {
+        return sendJson(response, 503, { error: "Too many live game connections. Please try again later." });
+      }
+      const stream = { playerId: player.id, response };
+      pongStreams.add(stream);
+      response.writeHead(200, {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-store, no-transform",
+        "X-Accel-Buffering": "no",
+      });
+      response.flushHeaders();
+      const timer = setInterval(() => {
+        if (collection.get(container.code) !== container ||
+          !container.players.some((member) => member.id === player.id) ||
+          (collection === groups && container.game !== game) || game.phase !== "playing") {
+          response.end('{"ended":true}\n');
+          return;
+        }
+        const { ball, paddles, scores } = game.gameState;
+        if (!response.write(`${JSON.stringify({ ball, paddles, scores })}\n`)) response.destroy();
+      }, 50);
+      response.on("close", () => {
+        clearInterval(timer);
+        pongStreams.delete(stream);
+      });
+      return;
+    }
     if (request.method === "POST" && url.pathname === "/api/single") {
       if (rooms.size + groups.size >= MAX_ROOMS) {
         return sendJson(response, 503, { error: "The server is full. Please try again later." });

@@ -470,3 +470,51 @@ test("individual Pong rooms still allow joining and advance after starting", asy
   assert.equal(state.status, 200);
   assert.notEqual(state.data.gameState.ball.x, started.data.gameState.ball.x);
 });
+
+test("Pong live streams require membership, advance, and close when a group member leaves", async () => {
+  const group = await createGroup(2);
+  const token = group.players[0].token;
+  const url = `${baseUrl}/api/pong-stream?code=${group.code}&group=1`;
+  const headers = { Authorization: `Bearer ${token}`, "X-Forwarded-For": group.ip };
+  assert.equal((await fetch(url, { headers })).status, 409);
+  await action(group, group.players[0], "select-game", { game: "pong" });
+  assert.equal((await fetch(url, { headers: { ...headers, Authorization: `Bearer ${"a".repeat(64)}` } })).status, 404);
+  const controller = new AbortController();
+  const response = await fetch(url, { headers, signal: controller.signal });
+  assert.equal(response.status, 200);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  const states = [];
+  while (states.length < 3) {
+    const { value, done } = await reader.read();
+    assert.equal(done, false);
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop();
+    states.push(...lines.map((line) => JSON.parse(line)));
+  }
+  assert.notEqual(states[0].ball.x, states[2].ball.x);
+  assert.deepEqual(Object.keys(states[0]).sort(), ["ball", "paddles", "scores"]);
+  await action(group, group.players[0], "leave");
+  while (!(await reader.read()).done) {}
+  controller.abort();
+});
+
+test("single-player Pong live streams are bounded and close on leaving", async () => {
+  const ip = `198.51.100.${ipCounter++}`;
+  const created = await request("/api/single", { body: { name: "Player", game: "pong", difficulty: "easy" }, ip });
+  const { code, playerToken } = created.data;
+  const url = `${baseUrl}/api/pong-stream?code=${code}`;
+  const headers = { Authorization: `Bearer ${playerToken}`, "X-Forwarded-For": ip };
+  const first = await fetch(url, { headers });
+  const second = await fetch(url, { headers });
+  assert.equal(first.status, 200);
+  assert.equal(second.status, 200);
+  assert.equal((await fetch(url, { headers })).status, 503);
+  await request("/api/action", { token: playerToken, body: { code, action: "leave" }, ip });
+  for (const response of [first, second]) {
+    const reader = response.body.getReader();
+    while (!(await reader.read()).done) {}
+  }
+});

@@ -406,3 +406,20 @@ footer span { color: #9269ee; margin-left: 4px; }
   .topbar { height: auto; min-height: 82px; padding: 10px 0; gap: 8px; flex-wrap: wrap; }
   #language-select, #theme-select { max-width: 110px; }
 }
+
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 1000px) {
+  .shell:has(.pong-playing) .topbar { height: 48px; }
+  .pong-playing { padding: 6px 0 24px; }
+  .pong-playing #room-content { display: flex; flex-direction: column; }
+  .pong-playing .room-layout { order: -1; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .pong-playing .players-card { order: 0; }
+  .pong-playing .game-pong { padding: 8px; }
+  .pong-playing .game-pong::before { display: none; }
+  .pong-playing .game-pong .game-status { margin: 0 auto 4px; padding: 3px 8px; }
+  .pong-playing .pong-play-area { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .pong-playing .canvas-wrap { width: min(100%, calc((100dvh - 125px) * 2)); margin: 0; }
+  .pong-playing .pong-touch-controls { flex-direction: column; gap: 10px; margin: 0; }
+  .pong-playing .pong-touch-button { min-width: 56px; min-height: 56px; }
+  .pong-playing .pong-controls { margin-top: 5px; }
+  .pong-playing .room-heading { padding-top: 14px; }
+}

@@ -401,6 +401,7 @@ Object.assign(translations.en, {
   soloGame: "Game", soloDifficulty: "Difficulty", soloEasy: "Easy", soloMedium: "Medium",
   soloHard: "Hard", soloStart: "Play solo", soloMode: "Single player", soloStarting: "Playing against a bot:",
   paddleUp: "Move paddle up", paddleDown: "Move paddle down",
+  pongConnection: "Live game connection interrupted. Reconnecting…",
   defeat: "Not this time!", resultDraw: "It's a draw!",
   battleshipDesc: "Place your fleet, then find and sink all five enemy ships.",
   battlePlace: "Place your ships", battleNext: "Next ship length", battleHorizontal: "Horizontal",
@@ -427,6 +428,7 @@ Object.assign(translations.de, {
   soloGame: "Spiel", soloDifficulty: "Schwierigkeit", soloEasy: "Leicht", soloMedium: "Mittel",
   soloHard: "Schwer", soloStart: "Alleine spielen", soloMode: "Einzelspieler", soloStarting: "Spiele gegen einen Bot:",
   paddleUp: "Schläger nach oben", paddleDown: "Schläger nach unten",
+  pongConnection: "Live-Verbindung unterbrochen. Verbindung wird wiederhergestellt…",
   defeat: "Diesmal leider verloren!", resultDraw: "Unentschieden!",
   battleshipDesc: "Platziere deine Flotte und versenke die fünf gegnerischen Schiffe.",
   battlePlace: "Platziere deine Schiffe", battleNext: "Länge des nächsten Schiffs", battleHorizontal: "Waagerecht",
@@ -453,6 +455,7 @@ Object.assign(translations.zh, {
   soloGame: "游戏", soloDifficulty: "难度", soloEasy: "简单", soloMedium: "中等",
   soloHard: "困难", soloStart: "单人游戏", soloMode: "单人游戏", soloStarting: "与电脑对战：",
   paddleUp: "挡板向上", paddleDown: "挡板向下",
+  pongConnection: "实时连接已中断，正在重新连接…",
   defeat: "这次输了！", resultDraw: "平局！",
   battleshipDesc: "布置舰队，然后找到并击沉对方的五艘船。",
   battlePlace: "布置你的舰船", battleNext: "下一艘船的长度", battleHorizontal: "横向",
@@ -479,6 +482,7 @@ Object.assign(translations.es, {
   soloGame: "Juego", soloDifficulty: "Dificultad", soloEasy: "Fácil", soloMedium: "Medio",
   soloHard: "Difícil", soloStart: "Jugar solo", soloMode: "Un jugador", soloStarting: "Jugar contra un bot:",
   paddleUp: "Mover pala hacia arriba", paddleDown: "Mover pala hacia abajo",
+  pongConnection: "Conexión en vivo interrumpida. Reconectando…",
   defeat: "¡Esta vez no pudo ser!", resultDraw: "¡Empate!",
   battleshipDesc: "Coloca tu flota y hunde los cinco barcos rivales.",
   battlePlace: "Coloca tus barcos", battleNext: "Longitud del siguiente barco", battleHorizontal: "Horizontal",
@@ -633,6 +637,12 @@ let resultEffectTimer = null;
 let roomCloseTimer = null;
 let battleOrientation = "horizontal";
 let touchPaddlePointer = null;
+let pongSamples = [];
+let pongFrame = null;
+let pongStream = null;
+let pongStreaming = false;
+let pongRetryTimer = null;
+let pongGameKey = "";
 const pressedKeys = new Set();
 applyLanguage();
 
@@ -787,6 +797,20 @@ function renderRoom(room) {
   currentGame = room.game;
   currentPhase = room.phase;
   currentSpectator = Boolean(room.group && room.group.round > 0 && room.you < 0);
+  const playingPong = room.game === "pong" && room.phase === "playing";
+  roomScreen.classList.toggle("pong-playing", playingPong);
+  if (playingPong) {
+    const gameKey = `${room.code}:${room.group?.round ?? 0}`;
+    if (gameKey !== pongGameKey) {
+      stopPongDisplay();
+      pongGameKey = gameKey;
+      if (window.matchMedia("(orientation: landscape) and (max-height: 500px) and (max-width: 1000px)").matches) {
+        window.scrollTo(0, 0);
+      }
+    }
+    if (!pongStreaming) updatePongDisplay(room.gameState);
+    if (!pongStream && !pongRetryTimer) startPongStream();
+  } else stopPongDisplay();
   if (!room.group && room.phase === "finished" && Number.isFinite(room.closesInMs) && roomCloseTimer === null) {
     const session = currentRoom;
     roomCloseTimer = setTimeout(() => {
@@ -796,6 +820,11 @@ function renderRoom(room) {
     }, room.closesInMs);
   }
   const { closesInMs, ...renderState } = room;
+  if (room.game === "pong" && room.phase === "playing") {
+    const { ball, paddles, directions, scores, ...rest } = room.gameState;
+    renderState.gameState = rest;
+    delete renderState.playerToken;
+  }
   const signature = JSON.stringify(renderState);
   if (signature === lastRendered) return;
   lastRendered = signature;
@@ -964,7 +993,7 @@ function renderRoom(room) {
       sendAction("paddle", { direction: lastPaddleDirection });
     });
   });
-  if (room.game === "pong" && room.phase !== "lobby") drawPong(room);
+  if (room.game === "pong" && room.phase === "finished") drawPong(room.gameState);
 }
 
 function renderGame(room, you) {
@@ -1005,9 +1034,11 @@ function renderGame(room, you) {
   }
   if (room.game === "pong") {
     return `<div class="game-status">${escapeHtml(message || `${state.scores[0]} — ${state.scores[1]}`)}</div>
-      <div class="canvas-wrap"><canvas id="pong-canvas" width="600" height="300" aria-label="Paddle Clash game field"></canvas></div>
-      <p class="pong-controls">${room.phase === "finished" ? t("gameOver") : `W / S or ↑ / ↓ · ${t("firstToFive")}`}</p>
-      ${room.phase === "playing" && room.you >= 0 ? `<div class="pong-touch-controls"><button class="button button-light pong-touch-button" data-direction="-1" aria-label="${t("paddleUp")}">▲</button><button class="button button-light pong-touch-button" data-direction="1" aria-label="${t("paddleDown")}">▼</button></div>` : ""}`;
+      <div class="pong-play-area">
+        <div class="canvas-wrap"><canvas id="pong-canvas" width="600" height="300" aria-label="Paddle Clash game field"></canvas></div>
+        ${room.phase === "playing" && room.you >= 0 ? `<div class="pong-touch-controls"><button class="button button-light pong-touch-button" data-direction="-1" aria-label="${t("paddleUp")}">▲</button><button class="button button-light pong-touch-button" data-direction="1" aria-label="${t("paddleDown")}">▼</button></div>` : ""}
+      </div>
+      <p class="pong-controls">${room.phase === "finished" ? t("gameOver") : `W / S or ↑ / ↓ · ${t("firstToFive")}`}</p>`;
   }
   if (room.game === "connect-four") {
     const canPlay = room.phase === "playing" && !state.winner && room.you === state.turn;
@@ -1097,11 +1128,114 @@ function renderGame(room, you) {
       `<button class="tic-cell${winningCells.has(index) ? " tic-winning-cell" : ""}" data-index="${index}" aria-label="Cell ${index + 1}${mark ? `: ${mark}` : ""}${winningCells.has(index) ? `, ${t("winningCell")}` : ""}" ${!canPlay || mark ? "disabled" : ""}>${mark}</button>`).join("")}</div>`;
 }
 
-function drawPong(room) {
+function updatePongDisplay(state) {
+  pongSamples.push({ state, receivedAt: performance.now() });
+  if (pongSamples.length > 20) pongSamples.shift();
+  if (pongFrame === null) pongFrame = requestAnimationFrame(animatePong);
+}
+
+async function startPongStream() {
+  const session = currentRoom;
+  const controller = new AbortController();
+  pongStream = controller;
+  let watchdog = null;
+  let timedOut = false;
+  const resetWatchdog = () => {
+    clearTimeout(watchdog);
+    watchdog = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 3000);
+  };
+  try {
+    resetWatchdog();
+    const params = new URLSearchParams({ code: session.code });
+    if (session.kind === "group") params.set("group", "1");
+    const response = await fetch(`/api/pong-stream?${params}`, {
+      headers: { Authorization: `Bearer ${session.playerToken}` },
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    if (!response.ok || !response.body) throw new Error(`Live connection failed (${response.status}).`);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) throw new Error("Live connection closed.");
+      resetWatchdog();
+      buffer += decoder.decode(value, { stream: true });
+      if (buffer.length > 16384) throw new Error("Invalid live game data.");
+      let end;
+      while ((end = buffer.indexOf("\n")) !== -1) {
+        const state = JSON.parse(buffer.slice(0, end));
+        buffer = buffer.slice(end + 1);
+        if (pongStream !== controller) return;
+        if (state.ended) {
+          stopPongDisplay();
+          refreshRoom();
+          return;
+        }
+        if (!pongStreaming) pongSamples = [];
+        pongStreaming = true;
+        updatePongDisplay(state);
+      }
+    }
+  } catch (error) {
+    if ((controller.signal.aborted && !timedOut) || pongStream !== controller) return;
+    controller.abort();
+    console.error("Paddle Clash live connection:", error);
+    showToast(t("pongConnection"));
+    pongStreaming = false;
+    pongStream = null;
+    pongRetryTimer = setTimeout(() => {
+      pongRetryTimer = null;
+      if (currentRoom === session && currentGame === "pong" && currentPhase === "playing") startPongStream();
+    }, 2000);
+  } finally {
+    clearTimeout(watchdog);
+  }
+}
+
+function stopPongDisplay() {
+  if (pongFrame !== null) cancelAnimationFrame(pongFrame);
+  if (pongStream) pongStream.abort();
+  clearTimeout(pongRetryTimer);
+  pongFrame = null;
+  pongStream = null;
+  pongStreaming = false;
+  pongRetryTimer = null;
+  pongSamples = [];
+  pongGameKey = "";
+}
+
+function animatePong(now) {
+  pongFrame = null;
+  if (!pongSamples.length || currentGame !== "pong" || currentPhase !== "playing") return;
+  const target = now - (pongStreaming ? 100 : 600);
+  while (pongSamples.length > 2 && pongSamples[1].receivedAt <= target) pongSamples.shift();
+  const first = pongSamples[0];
+  const second = pongSamples[1] || first;
+  const span = second.receivedAt - first.receivedAt;
+  const fraction = span > 0 ? Math.max(0, Math.min(1, (target - first.receivedAt) / span)) : 0;
+  const scored = first.state.scores.some((score, index) => score !== second.state.scores[index]);
+  const lerp = (a, b) => a + (b - a) * fraction;
+  const ball = scored ? (fraction < 1 ? first.state.ball : second.state.ball) : {
+    x: lerp(first.state.ball.x, second.state.ball.x),
+    y: lerp(first.state.ball.y, second.state.ball.y),
+  };
+  const scores = fraction < 1 ? first.state.scores : second.state.scores;
+  const status = roomContent.querySelector(".game-pong .game-status");
+  if (status) status.textContent = `${scores[0]} — ${scores[1]}`;
+  drawPong({ ball, paddles: first.state.paddles.map((position, index) => lerp(position, second.state.paddles[index])), scores });
+  pongFrame = requestAnimationFrame(animatePong);
+}
+
+function drawPong(state) {
   const canvas = roomContent.querySelector("#pong-canvas");
   if (!canvas) return;
   const context = canvas.getContext("2d");
-  const { ball, paddles, scores } = room.gameState;
+  const { ball, paddles, scores } = state;
   const width = canvas.width;
   const height = canvas.height;
   context.fillStyle = "#17242c";
@@ -1138,6 +1272,8 @@ function leaveRoom() {
     sendAction("paddle", { direction: 0 });
   }
   clearInterval(pollTimer);
+  stopPongDisplay();
+  roomScreen.classList.remove("pong-playing");
   clearTimeout(roomCloseTimer);
   roomCloseTimer = null;
   clearTimeout(fireworksTimer);

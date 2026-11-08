@@ -22,7 +22,10 @@ Select **Play against a bot** on the home page to play Tic-Tac-Toe, Connect
 Four, Memory Match, Battleship, or Paddle Clash. Choose Easy, Medium, or Hard
 before entering your name. Bots run on the server, so a connection is still
 required; solo games are private and separate from multiplayer rooms and groups.
-Paddle Clash supports keyboard and on-screen controls.
+Paddle Clash supports keyboard and on-screen controls, including a compact
+phone landscape layout. Live updates arrive about every 50 ms and are
+interpolated for smooth rendering; scoring and collisions remain authoritative
+on the server. An unstable connection can still cause delays.
 
 ## Deploy on Render
 
