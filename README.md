@@ -55,7 +55,7 @@ finished game. Winners see fireworks; both players still see fireworks after a
 Tic-Tac-Toe win. Spectators and abandoned games do not get a personal result.
 Animations are disabled when the device is set to reduce motion.
 
-Choose Classic, Ocean, Sunset, Forest, Berry, or Citrus from the color selector in the header. The
+Choose Classic, Ocean, Sunset, Forest, Berry, Citrus, or Dark from the color selector in the header. The
 choice is saved in the current browser and does not change other players' themes.
 In Rock Paper Scissors, choices stay hidden until everyone has chosen; the
 result is shown for three seconds before the next round.

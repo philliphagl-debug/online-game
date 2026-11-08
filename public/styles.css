@@ -104,6 +104,24 @@
   --accent-text: #78470c;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #edf0fa;
+  --muted: #bec7dc;
+  --paper: #10131f;
+  --line: #39435a;
+  --purple: #c1a8ff;
+  --glow-left: #30214d;
+  --glow-right: #15353c;
+  --surface: #1d2434;
+  --surface-soft: #252e40;
+  --panel-end: #29233d;
+  --primary-gradient: linear-gradient(135deg, #7653cf, #5134a4);
+  --brand-gradient: linear-gradient(135deg, #9872ee, #51408e);
+  --accent-soft: #352b4d;
+  --accent-text: #e2d5ff;
+}
+
 * { box-sizing: border-box; }
 body { margin: 0; background: radial-gradient(ellipse at 12% 0%, var(--glow-left) 0, transparent 34rem), radial-gradient(ellipse at 90% 8%, var(--glow-right) 0, transparent 30rem), var(--paper); color: var(--ink); }
 button, input { font: inherit; }
@@ -283,6 +301,47 @@ footer span { color: #9269ee; margin-left: 4px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 .button-light { background: #f0f1ee; color: #4a555b; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+:root[data-theme="dark"] .online-label,
+:root[data-theme="dark"] .card-meta,
+:root[data-theme="dark"] footer,
+:root[data-theme="dark"] .back-button,
+:root[data-theme="dark"] .player-tag,
+:root[data-theme="dark"] .round-label,
+:root[data-theme="dark"] .name-dialog label,
+:root[data-theme="dark"] .board-title { color: var(--muted); }
+:root[data-theme="dark"] .player-row { border-color: var(--line); }
+:root[data-theme="dark"] .invite-share input,
+:root[data-theme="dark"] .group-game-form select { background: var(--surface-soft); color: var(--ink); }
+:root[data-theme="dark"] .button-light { background: #39465e; color: #fff; }
+:root[data-theme="dark"] .button-dark { background: #3a4860; }
+:root[data-theme="dark"] .name-dialog .form-error { color: #ffafb5; }
+:root[data-theme="dark"] .game-stage { --game-accent: #d3baff; --game-tint: #302643; }
+:root[data-theme="dark"] .game-pong,
+:root[data-theme="dark"] .game-battleship { --game-accent: #82d9e8; --game-tint: #19333d; }
+:root[data-theme="dark"] .game-tic-tac-toe,
+:root[data-theme="dark"] .game-connect-four { --game-accent: #ffb6a2; --game-tint: #3c292e; }
+:root[data-theme="dark"] .game-word-scramble,
+:root[data-theme="dark"] .game-hangman { --game-accent: #9de3bd; --game-tint: #1d3933; }
+:root[data-theme="dark"] .game-memory-match { --game-accent: #e5b9ef; --game-tint: #3a2942; }
+:root[data-theme="dark"] .game-rock-paper-scissors,
+:root[data-theme="dark"] .game-reaction-race { --game-accent: #ffd094; --game-tint: #403025; }
+:root[data-theme="dark"] .game-higher-lower { --game-accent: #a9ccff; --game-tint: #26334b; }
+:root[data-theme="dark"] .tic-cell { background: #303a50; color: #e2d0ff; }
+:root[data-theme="dark"] .tic-cell:nth-child(2n) { color: #a6edcd; }
+:root[data-theme="dark"] .tic-cell.tic-winning-cell { background: #236043; border-color: #9fe6be; color: #fff; box-shadow: inset 0 0 0 2px #236043; }
+:root[data-theme="dark"] .connect-cell:not(.disc-r):not(.disc-y) { background: #202b42; }
+:root[data-theme="dark"] .memory-cell { background: #393050; border-color: #665782; color: #e6d5ff; }
+:root[data-theme="dark"] .memory-cell.matched { background: #23523f; border-color: #78c69a; color: #c2f5d6; }
+:root[data-theme="dark"] .letter-button { background: var(--surface-soft); color: var(--ink); }
+:root[data-theme="dark"] .letter-button:disabled { background: #293142; color: #97a2b9; }
+:root[data-theme="dark"] .battle-board { background: #284354; }
+:root[data-theme="dark"] .battle-cell { background: #324e60; border-color: #557183; color: #fff; }
+:root[data-theme="dark"] .battle-cell:not(:disabled):hover { background: #4a7184; }
+:root[data-theme="dark"] .battle-cell.battle-hit { background: #a94642; color: #fff; }
+:root[data-theme="dark"] .battle-cell.battle-sunk { background: #7d2729; color: #fff; }
+:root[data-theme="dark"] .battle-cell.battle-miss { background: #233344; color: #c1d9e5; }
+:root[data-theme="dark"] .battle-cell.battle-ship { background: #a5bfc9; border-color: #d3e2e8; }
 
 .fireworks { position: fixed; inset: 0; z-index: 4; overflow: hidden; pointer-events: none; }
 .result-effect { position: fixed; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none; animation: result-fade 2.6s ease-out forwards; }
